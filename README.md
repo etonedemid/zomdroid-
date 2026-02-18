@@ -1,9 +1,8 @@
-> [!WARNING] 
-> Development is currently on hold while I wait for an official response from The Indie Stone regarding potential sponsorship. Just to clarify — TIS is not blocking or interfering with development in any way. I'm simply waiting to hear back, as I don’t have the resources to continue without financial support.
 
-# Zomdroid
 
-**Zomdroid** is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.
+# Zomdroid++
+
+**Zomdroid++** is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.
 
 > [!NOTE]
 > This application is **not developed by The Indie Stone** and is **not affiliated with them** in any way.
@@ -24,11 +23,8 @@
 
 Planned features in order of priority:
 
-1. Expand GPU and device compatibility
-2. Optimize and improve performance
-3. Add external input support (mouse and keyboard, physical controller) 
-4. Add multiplayer support
-
+1. Add external gamepad support
+2. Migrate to FEX-emu
 ## Prebuilt binaries and JARs
 
 Prebuilt binaries and JARs are located in the `app/src/main/assets/dependencies` folder,  
