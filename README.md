@@ -1,5 +1,3 @@
-
-
 # Zomdroid++
 
 **Zomdroid++** is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.
@@ -37,11 +35,11 @@ All Zomdroid dependencies—**except Box64 and GLFW**—can be either:
   
 ## Supporting Development
 
-This is an independent project. To help keep it going, financial contributions are welcome via [Ko-Fi](https://ko-fi.com/liamelui).
+This is an independent project. I do not accept donations at the moment.
 
 ## Feedback
 
-Please report issues or suggest features via [GitHub Issues](https://github.com/liamelui/zomdroid/issues)
+Please report issues or suggest features via GitHub Issues
 
 ## Credits & Third-Party Sources
 - [OpenJDK](https://github.com/openjdk/jdk) (Android port by [PojavLauncherTeam](https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch)) - Used as the Java backend
