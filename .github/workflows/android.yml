@@ -30,62 +30,19 @@ jobs:
           echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/28.0.13004108" >> "$GITHUB_ENV"
       - name: Grant execute on gradlew
         run: chmod +x ./gradlew
+      - name: Apply custom app icon
+        run: |
+          set -e
+          echo "Replacing launcher icon resource files with custom icon.png"
+          
+          # Replace all launcher icon foreground and monochrome images with the custom icon
+          find app/src/main/res/mipmap-* -type f \( -name 'ic_launcher_foreground.png' -o -name 'ic_launcher_monochrome_foreground.png' \) -print -exec cp icon.png {} \;
+          
+          echo "Icon files updated successfully"
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
-      - name: Patch APK icons
-        run: |
-          set -e
-          # Function to patch an APK with the icon
-          patch_apk() {
-            local APK_PATH="$1"
-            local WORK_DIR="$(dirname "$APK_PATH")/patch_work_$(basename "$APK_PATH" .apk)"
-            
-            echo "Patching APK: $APK_PATH"
-            
-            # Create work directory
-            rm -rf "$WORK_DIR"
-            mkdir -p "$WORK_DIR"
-            cd "$WORK_DIR"
-            
-            # Unpack APK
-            echo "Unpacking APK..."
-            unzip -q "$APK_PATH" -d unpacked
-            
-            # Replace icon files
-            echo "Replacing launcher icon files with repo root icon.png"
-            find unpacked/res -type f \( -name 'ic_launcher_foreground.png' -o -name '*_monochrome_foreground.png' -o -name 'ic_launcher.png' \) -print -exec cp "$GITHUB_WORKSPACE/icon.png" {} \;
-            
-            # Repack APK
-            echo "Repacking APK..."
-            cd unpacked
-            zip -qr ../patched.apk .
-            cd ..
-            
-            # Replace original APK with patched version
-            mv patched.apk "$APK_PATH"
-            
-            # Cleanup
-            cd "$GITHUB_WORKSPACE"
-            rm -rf "$WORK_DIR"
-            
-            echo "Successfully patched: $APK_PATH"
-          }
-          
-          # Patch all debug APKs
-          for apk in app/build/outputs/apk/debug/*.apk; do
-            if [ -f "$apk" ]; then
-              patch_apk "$apk"
-            fi
-          done
-          
-          # Patch all release APKs
-          for apk in app/build/outputs/apk/release/*.apk; do
-            if [ -f "$apk" ]; then
-              patch_apk "$apk"
-            fi
-          done
       - name: Prepare release keystore (from secret)
         run: |
           if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
