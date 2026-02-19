@@ -1,0 +1,101 @@
+name: Android CI
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+jobs:
+  build:
+    name: Build APKs
+    runs-on: ubuntu-latest
+    env:
+      JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+      - name: Install Android SDK components
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          build-tools: '31.0.0'
+          arch: x86_64
+      - name: Grant execute on gradlew
+        run: chmod +x ./gradlew
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+      - name: Prepare release keystore (from secret)
+        if: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > $HOME/release.keystore
+          ls -l $HOME/release.keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+      - name: Sign Release APK(s)
+        if: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
+        run: |
+          set -euo pipefail
+          SDK_ROOT=${ANDROID_SDK_ROOT:-$ANDROID_HOME}
+          BUILD_TOOLS=31.0.0
+          APK_DIR=app/build/outputs/apk/release
+          for APK in "$APK_DIR"/*.apk; do
+            # skip already-signed apks with -signed in name
+            BASENAME=$(basename "$APK")
+            if [[ "$BASENAME" == *-signed.apk ]]; then
+              echo "Skipping already-signed: $APK"
+              continue
+            fi
+            ALIGNED="$APK.dir-aligned.apk"
+            SIGNED="${APK%.apk}-signed.apk"
+            echo "Aligning $APK -> $ALIGNED"
+            "$SDK_ROOT/build-tools/$BUILD_TOOLS/zipalign" -v 4 "$APK" "$ALIGNED"
+            echo "Signing $ALIGNED -> $SIGNED"
+            "$SDK_ROOT/build-tools/$BUILD_TOOLS/apksigner" sign --ks $HOME/release.keystore --ks-pass pass:$RELEASE_STORE_PASSWORD --key-pass pass:$RELEASE_KEY_PASSWORD --out "$SIGNED" "$ALIGNED"
+            ls -l "$SIGNED"
+          done
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apks
+          path: app/build/outputs/apk/debug/*.apk
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apks
+          path: |
+            app/build/outputs/apk/release/*-signed.apk
+            app/build/outputs/apk/release/*.apk
+      - name: Create GitHub Release (on tag)
+        id: create_release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            Release created by CI for ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release APK to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: app/build/outputs/apk/release/*-signed.apk
+          asset_name: app-release-signed.apk
+          asset_content_type: application/vnd.android.package-archive
