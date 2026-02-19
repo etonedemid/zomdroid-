@@ -245,6 +245,8 @@ public class InputControlsView extends View {
     public void setOverlayEnabled(boolean enabled) {
         this.overlayEnabled = enabled;
         this.setVisibility(enabled ? VISIBLE : GONE);
+        // Persist overlay enabled to shared prefs so UI toggles remain consistent
+        this.sharedPreferences.edit().putBoolean(C.shprefs.keys.OVERLAY_ENABLED, enabled).apply();
     }
 
     public boolean isOverlayEnabled() {

@@ -21,6 +21,13 @@
             android:layout_height="wrap_content"
             android:text="@string/controller_config_enabled" />
 
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/controller_config_overlay_controls_ms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/controller_config_overlay_controls" />
+
         <TextView
             android:id="@+id/controller_config_deadzone_tv"
             android:layout_width="match_parent"
