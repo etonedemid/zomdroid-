@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:id="@+id/controller_config_root_ll"
@@ -13,92 +14,111 @@
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/content_padding">
 
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/controller_config_enabled_ms"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/controller_config_enabled" />
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/controller_config_overlay_controls_ms"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/controller_config_overlay_controls" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/content_padding">
 
-        <TextView
-            android:id="@+id/controller_config_deadzone_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/controller_config_deadzone"
-            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/controller_config_enabled_ms"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/controller_config_enabled" />
 
-        <TextView
-            android:id="@+id/controller_config_deadzone_value_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            tools:text="20%" />
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/controller_config_overlay_controls_ms"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/controller_config_overlay_controls" />
 
-        <SeekBar
-            android:id="@+id/controller_config_deadzone_sb"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="60" />
+                <TextView
+                    android:id="@+id/controller_config_deadzone_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/controller_config_deadzone"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-        <TextView
-            android:id="@+id/controller_config_preview_title_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/controller_config_input_preview"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+                <TextView
+                    android:id="@+id/controller_config_deadzone_value_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    tools:text="20%" />
 
-        <TextView
-            android:id="@+id/controller_config_preview_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/controller_config_input_preview_idle"
-            android:textAppearance="?attr/textAppearanceBodyMedium" />
+                <SeekBar
+                    android:id="@+id/controller_config_deadzone_sb"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="60" />
 
-        <TextView
-            android:id="@+id/controller_config_button_mappings_title_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/controller_config_button_mappings"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+                <TextView
+                    android:id="@+id/controller_config_preview_title_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/controller_config_input_preview"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
 
-        <LinearLayout
-            android:id="@+id/controller_config_button_mappings_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
+                <TextView
+                    android:id="@+id/controller_config_preview_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/controller_config_input_preview_idle"
+                    android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-        <TextView
-            android:id="@+id/controller_config_axis_mappings_title_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/controller_config_axis_mappings"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+                <TextView
+                    android:id="@+id/controller_config_button_mappings_title_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/controller_config_button_mappings"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-        <LinearLayout
-            android:id="@+id/controller_config_axis_mappings_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
+                <LinearLayout
+                    android:id="@+id/controller_config_button_mappings_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/controller_config_axis_mappings_title_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/controller_config_axis_mappings"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                <LinearLayout
+                    android:id="@+id/controller_config_axis_mappings_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/controller_config_reset_mb"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="@dimen/content_section_spacing"
             android:text="@string/controller_config_reset" />
 
     </LinearLayout>

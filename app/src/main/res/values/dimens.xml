@@ -1,5 +1,12 @@
 <resources>
-    <dimen name="list_item_height">56dp</dimen>
+    <dimen name="content_padding">16dp</dimen>
+    <dimen name="content_padding_small">12dp</dimen>
+    <dimen name="content_spacing">12dp</dimen>
+    <dimen name="content_section_spacing">20dp</dimen>
+    <dimen name="card_corner_radius">16dp</dimen>
+
+    <dimen name="list_item_height">64dp</dimen>
     <dimen name="list_item_leading_space">16dp</dimen>
-    <dimen name="list_item_trailing_space">0dp</dimen>
+    <dimen name="list_item_trailing_space">16dp</dimen>
+    <dimen name="list_item_vertical_space">6dp</dimen>
 </resources>

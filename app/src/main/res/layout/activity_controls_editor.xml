@@ -15,10 +15,13 @@
         android:id="@+id/control_element_settings_cv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="16dp"
+        android:layout_margin="@dimen/content_padding"
         android:visibility="gone"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="8dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+        app:cardCornerRadius="@dimen/card_corner_radius"
+        app:cardElevation="0dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp"
         tools:visibility="visible">
 
         <ScrollView
@@ -34,7 +37,7 @@
                 android:id="@+id/control_element_settings_cl"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp">
+                android:layout_margin="@dimen/content_padding">
 
 
                 <TextView
@@ -297,7 +300,8 @@
 
                 <Button
                     android:id="@+id/element_delete_b"
-                    android:layout_width="wrap_content"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/element_stick_binding_s"

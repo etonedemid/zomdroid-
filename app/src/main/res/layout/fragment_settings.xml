@@ -1,83 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/content_padding">
 
-        <TextView
-            android:id="@+id/settings_renderer_tv"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_renderer"
-            android:textAppearance="?attr/textAppearanceBodyLarge" />
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
-        <Spinner
-            android:id="@+id/settings_renderer_s"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/content_padding">
 
-        <TextView
-            android:id="@+id/settings_vulkan_driver_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/settings_vulkan_driver"
-            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                <TextView
+                    android:id="@+id/settings_renderer_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_renderer"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-        <Spinner
-            android:id="@+id/settings_vulkan_driver_s"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+                <Spinner
+                    android:id="@+id/settings_renderer_s"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
 
-        <TextView
-            android:id="@+id/settings_resolution_scale_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/settings_resolution_scale"
-            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                <TextView
+                    android:id="@+id/settings_vulkan_driver_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/settings_vulkan_driver"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-        <TextView
-            android:id="@+id/settings_resolution_scale_percent_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            tools:text="100%" />
+                <Spinner
+                    android:id="@+id/settings_vulkan_driver_s"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
 
-        <SeekBar
-            android:id="@+id/settings_resolution_scale_sb"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@null"
-            android:max="100"
-            android:min="25" />
+                <TextView
+                    android:id="@+id/settings_resolution_scale_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/settings_resolution_scale"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-        <TextView
-            android:id="@+id/settings_audio_api_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/settings_audio_api"
-            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                <TextView
+                    android:id="@+id/settings_resolution_scale_percent_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:gravity="end"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    tools:text="100%" />
 
-        <Spinner
-            android:id="@+id/settings_audio_api_s"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+                <SeekBar
+                    android:id="@+id/settings_resolution_scale_sb"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:max="100"
+                    android:min="25" />
+
+                <TextView
+                    android:id="@+id/settings_audio_api_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/settings_audio_api"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                <Spinner
+                    android:id="@+id/settings_audio_api_s"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/settings_controller_config_mb"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="@dimen/content_section_spacing"
             android:text="@string/settings_controller_config" />
 
     </LinearLayout>

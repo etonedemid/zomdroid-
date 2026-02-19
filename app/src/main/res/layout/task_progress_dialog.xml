@@ -4,24 +4,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="?attr/colorSurface">
 
 
     <TextView
         android:id="@+id/progress_dialog_title_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Title"/>
 
     <TextView
         android:id="@+id/progress_dialog_message_tv"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/progress_dialog_title_tv"
+        app:layout_constraintEnd_toEndOf="parent"
         tools:text="Message"
         android:layout_marginTop="16dp"/>
 
@@ -36,9 +39,9 @@
         android:layout_marginTop="16dp"/>
 
     <com.google.android.material.button.MaterialButton
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+        style="?attr/materialButtonOutlinedStyle"
         android:id="@+id/progress_dialog_ok_mb"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/dialog_button_ok"
         app:layout_constraintTop_toBottomOf="@id/progress_dialog_progress_lpi"

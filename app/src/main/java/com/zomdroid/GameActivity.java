@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -85,6 +86,13 @@ public class GameActivity extends AppCompatActivity {
         if (!externalControllerConfig.overlayControlsEnabled) {
             binding.inputControlsV.setOverlayEnabled(false);
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                showExitGameDialog();
+            }
+        });
 
 /*        gestureDetector = new GestureDetector(this, new GestureDetector.OnGestureListener() {
             private boolean showPress = false;
@@ -223,49 +231,83 @@ public class GameActivity extends AppCompatActivity {
         });
 
         // add in-game overlay toggle button (top-right)
-        binding.getRoot().post(() -> {
-            android.widget.ImageButton toggle = new android.widget.ImageButton(this);
-            toggle.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
-            // match transparency to overlay controls opacity
-            int alpha = Math.round(binding.inputControlsV.getOverlayOpacityPercent() / 100f * 255f);
-            int bgColor = (alpha << 24) | 0x000000;
-            toggle.setBackgroundColor(bgColor);
-            toggle.setImageAlpha(alpha);
-            int size = (int) (56 * getResources().getDisplayMetrics().density);
-            android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(size, size);
-            params.gravity = android.view.Gravity.TOP | android.view.Gravity.END;
-            params.setMargins(16, 16, 16, 16);
-            toggle.setLayoutParams(params);
-            toggle.setOnClickListener(v -> {
-                boolean enabled = !binding.inputControlsV.isOverlayEnabled();
-                binding.inputControlsV.setOverlayEnabled(enabled);
-                getSharedPreferences(C.shprefs.NAME, MODE_PRIVATE)
-                        .edit()
-                        .putBoolean(C.shprefs.keys.OVERLAY_ENABLED, enabled)
-                        .apply();
+        if (externalControllerConfig.overlayControlsEnabled) {
+            binding.getRoot().post(() -> {
+                android.widget.ImageButton toggle = new android.widget.ImageButton(this);
+                toggle.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+                int alpha = Math.round(binding.inputControlsV.getOverlayOpacityPercent() / 100f * 255f);
+                int bgColor = (alpha << 24) | 0x000000;
+                toggle.setBackgroundColor(bgColor);
+                toggle.setImageAlpha(alpha);
+                int size = (int) (56 * getResources().getDisplayMetrics().density);
+                android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(size, size);
+                params.gravity = android.view.Gravity.TOP | android.view.Gravity.END;
+                params.setMargins(16, 16, 16, 16);
+                toggle.setLayoutParams(params);
+                toggle.setOnClickListener(v -> {
+                    boolean enabled = !binding.inputControlsV.isOverlayEnabled();
+                    binding.inputControlsV.setOverlayEnabled(enabled);
+                    getSharedPreferences(C.shprefs.NAME, MODE_PRIVATE)
+                            .edit()
+                            .putBoolean(C.shprefs.keys.OVERLAY_ENABLED, enabled)
+                            .apply();
+                });
+                binding.getRoot().addView(toggle);
             });
-            binding.getRoot().addView(toggle);
-        });
+        }
 
     }
 
     @Override
     public void onBackPressed() {
-        // Show confirmation dialog to return to the launcher menu (close game)
+        showExitGameDialog();
+    }
+
+    private void showExitGameDialog() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_close_game_title)
                 .setMessage(R.string.dialog_close_game_message)
                 .setNegativeButton(R.string.dialog_button_cancel, (d, which) -> d.dismiss())
-                .setPositiveButton(R.string.dialog_button_ok, (d, which) -> {
-                    // Return to launcher menu — start LauncherActivity and finish GameActivity
-                    Intent intent = new Intent(this, LauncherActivity.class);
-                    // If launcher already exists, bring it to front instead of creating a new instance
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivity(intent);
-                    finish();
-                })
+                .setPositiveButton(R.string.dialog_button_ok, (d, which) -> exitGameToLauncher())
                 .setCancelable(true)
                 .show();
+    }
+
+    private void exitGameToLauncher() {
+        cleanupGameRuntime();
+        Intent intent = new Intent(this, LauncherActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
+    }
+
+    private void cleanupGameRuntime() {
+        try {
+            GameLauncher.destroySurface();
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            GameLauncher.destroyZomdroidWindow();
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            FMOD.close();
+        } catch (Throwable ignored) {
+        }
+
+        isGameStarted = false;
+        sentJoystickConnected = false;
+        dpadState = 0;
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (isFinishing()) {
+            cleanupGameRuntime();
+        }
+        super.onDestroy();
     }
 
     public void setOverlayEnabled(boolean enabled) {
