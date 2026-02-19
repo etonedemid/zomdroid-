@@ -279,6 +279,50 @@ public class ControlsEditorActivity extends AppCompatActivity {
 
         binding.controlElementSettingsCv.setVisibility(View.INVISIBLE); // originally GONE, but we need layout before first open()
 
+        // Overlay controls: add hide overlay button and opacity control in editor
+        // Simple toggle button in the action area
+        binding.getRoot().post(() -> {
+            // add a small toggle button to the root layout programmatically to avoid changing XML here
+            android.widget.ImageButton toggle = new android.widget.ImageButton(this);
+            toggle.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+            toggle.setBackgroundColor(0x00000000);
+            int size = (int) (48 * getResources().getDisplayMetrics().density);
+            android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(size, size);
+            params.gravity = android.view.Gravity.TOP | android.view.Gravity.END;
+            params.setMargins(16, 16, 16, 16);
+            toggle.setLayoutParams(params);
+            toggle.setOnClickListener(v -> {
+                boolean enabled = !binding.inputControlsV.isOverlayEnabled();
+                binding.inputControlsV.setOverlayEnabled(enabled);
+                getSharedPreferences(C.shprefs.NAME, MODE_PRIVATE)
+                        .edit()
+                        .putBoolean(C.shprefs.keys.OVERLAY_ENABLED, enabled)
+                        .apply();
+            });
+            binding.getRoot().addView(toggle);
+
+            // Add opacity seekbar at bottom
+            android.widget.SeekBar opacity = new android.widget.SeekBar(this);
+            android.widget.FrameLayout.LayoutParams p2 = new android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
+            p2.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL;
+            opacity.setLayoutParams(p2);
+            opacity.setMax(100);
+            opacity.setProgress(binding.inputControlsV.getOverlayOpacityPercent());
+            opacity.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+                    binding.inputControlsV.setOverlayOpacityPercent(progress);
+                }
+
+                @Override
+                public void onStartTrackingTouch(android.widget.SeekBar seekBar) {}
+
+                @Override
+                public void onStopTrackingTouch(android.widget.SeekBar seekBar) {}
+            });
+            binding.getRoot().addView(opacity);
+        });
+
 
         binding.elementTextEt.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
