@@ -21,13 +21,9 @@
 ## Roadmap
 
 Planned features in order of priority:
-
-<<<<<<< HEAD
-1. Migrate to FEX-emu
-=======
- UI refinement, request features on discord: @etonedemid or my mail etonedemid@gmail.com
-
->>>>>>> 1e8a9fdd780e1804c5eeda1b4e07cc8d351de242
+ UI refinement, Google Play release.
+ request features on discord: @etonedemid or my mail etonedemid@gmail.com
+ 
 ## Prebuilt binaries and JARs
 
 Prebuilt binaries and JARs are located in the `app/src/main/assets/dependencies` folder,  
@@ -42,7 +38,11 @@ External controller support/remapping is implemented in the Android launcher inp
   
 ## Supporting Development
 
-This is an independent project. I do not accept donations at the moment.
+This is an independent project, Donate if you wish to see this on Google Play!
+Developer account fund: 0/20$
+paypal.me/etonedemid
+BTC: bc1qa9730ykua7f3qv426qm9cjv9mupwj8kj8kzsuz
+TRC20:  TLnPV1JCpLwMyTcnmHoRDXMmwLpcjoFsDc
 
 ## Feedback
 
