@@ -47,8 +47,8 @@
     <string name="dialog_button_cancel">Cancel</string>
     <string name="dialog_title_delete_game_instance">Delete game instance?</string>
     <string name="dialog_title_info">Info</string>
-    <string name="dialog_close_game_title">Exit game?</string>
-    <string name="dialog_close_game_message">Do you want to close the running game and return to the launcher menu?</string>
+    <string name="dialog_close_game_title">Exit back to menu?</string>
+    <string name="dialog_close_game_message">Return to the launcher menu? The game will be closed and you will go back to the app menu.</string>
     <string name="dialog_title_fatal_error">Fatal error</string>
     <string name="dialog_title_creating_instance">Creating game instance…</string>
     <string name="dialog_title_instance_created">Instance successfully created</string>
