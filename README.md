@@ -42,6 +42,9 @@ This is an independent project. I do not accept donations at the moment.
 Please report issues or suggest features via GitHub Issues
 
 ## Credits & Third-Party Sources
+
+- [Zomdroid](https://github.com/liamelui/zomdroid) - the base of the project
+
 - [OpenJDK](https://github.com/openjdk/jdk) (Android port by [PojavLauncherTeam](https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch)) - Used as the Java backend
 
 - [Box64](https://github.com/ptitSeb/box64) - Used as the emulation backend
