@@ -1,6 +1,6 @@
-# Zomdroid++
+# Zomdroid-
 
-**Zomdroid++** is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.
+**Zomdroid-* is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.*
 
 > [!NOTE]
 > This application is **not developed by The Indie Stone** and is **not affiliated with them** in any way.
@@ -22,7 +22,12 @@
 
 Planned features in order of priority:
 
+<<<<<<< HEAD
 1. Migrate to FEX-emu
+=======
+ UI refinement, request features on discord: @etonedemid or my mail etonedemid@gmail.com
+
+>>>>>>> 1e8a9fdd780e1804c5eeda1b4e07cc8d351de242
 ## Prebuilt binaries and JARs
 
 Prebuilt binaries and JARs are located in the `app/src/main/assets/dependencies` folder,  
@@ -44,6 +49,9 @@ This is an independent project. I do not accept donations at the moment.
 Please report issues or suggest features via GitHub Issues
 
 ## Credits & Third-Party Sources
+
+- [Zomdroid](https://github.com/liamelui/zomdroid) - the base of the project
+
 - [OpenJDK](https://github.com/openjdk/jdk) (Android port by [PojavLauncherTeam](https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch)) - Used as the Java backend
 
 - [Box64](https://github.com/ptitSeb/box64) - Used as the emulation backend
