@@ -32,6 +32,7 @@ public class C {
         public static class keys {
             public static final String LAUNCHER_VERSION = "launcherVersion";
             public static final String INPUT_CONTROLS = "inputControls";
+            public static final String EXTERNAL_CONTROLLER_CONFIG = "externalControllerConfig";
             public static final String GAME_INSTANCES = "gameInstances";
             public static final String LAUNCHER_PREFS = "launcherPrefs";
             public static final String INSTALLED_BUNDLES = "installedBundles";

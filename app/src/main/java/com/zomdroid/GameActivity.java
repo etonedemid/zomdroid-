@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.system.ErrnoException;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.InputDevice;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -18,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.zomdroid.input.GLFWBinding;
+import com.zomdroid.input.ExternalControllerConfig;
 import com.zomdroid.input.InputNativeInterface;
 import com.zomdroid.databinding.ActivityGameBinding;
 import com.zomdroid.game.GameInstance;
@@ -36,6 +39,9 @@ public class GameActivity extends AppCompatActivity {
     private Surface gameSurface;
     private static boolean isGameStarted = false;
     private GestureDetector gestureDetector;
+    private ExternalControllerConfig externalControllerConfig;
+    private int dpadState = 0;
+    private boolean sentJoystickConnected = false;
 
     @SuppressLint({"UnsafeDynamicallyLoadedCode", "ClickableViewAccessibility"})
     @Override
@@ -70,6 +76,8 @@ public class GameActivity extends AppCompatActivity {
         System.loadLibrary("fmodstudio");*/
 
         FMOD.init(this);
+
+        externalControllerConfig = ExternalControllerConfig.load(this);
 
 /*        gestureDetector = new GestureDetector(this, new GestureDetector.OnGestureListener() {
             private boolean showPress = false;
@@ -203,5 +211,174 @@ public class GameActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
+
+    private boolean isFromGamepad(InputDevice device, int source) {
+        return (source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+                || (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+                || (source & InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD
+                || (device != null && device.supportsSource(InputDevice.SOURCE_GAMEPAD));
+    }
+
+    private void ensureJoystickConnected() {
+        if (sentJoystickConnected) {
+            return;
+        }
+        InputNativeInterface.sendJoystickConnected();
+        sentJoystickConnected = true;
+    }
+
+    private void sendMappedButton(GLFWBinding binding, boolean isPressed) {
+        if (binding == GLFWBinding.GAMEPAD_LTRIGGER) {
+            InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_LT.code, isPressed ? 1f : 0f);
+            return;
+        }
+        if (binding == GLFWBinding.GAMEPAD_RTRIGGER) {
+            InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_RT.code, isPressed ? 1f : 0f);
+            return;
+        }
+        InputNativeInterface.sendJoystickButton(binding.code, isPressed);
+    }
+
+    private void sendMappedAxis(GLFWBinding targetAxis, float value) {
+        InputNativeInterface.sendJoystickAxis(targetAxis.code, value);
+    }
+
+    private GLFWBinding getMappedButtonForKeyCode(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BUTTON_A:
+                return externalControllerConfig.buttonA;
+            case KeyEvent.KEYCODE_BUTTON_B:
+                return externalControllerConfig.buttonB;
+            case KeyEvent.KEYCODE_BUTTON_X:
+                return externalControllerConfig.buttonX;
+            case KeyEvent.KEYCODE_BUTTON_Y:
+                return externalControllerConfig.buttonY;
+            case KeyEvent.KEYCODE_BUTTON_L1:
+                return externalControllerConfig.buttonLb;
+            case KeyEvent.KEYCODE_BUTTON_R1:
+                return externalControllerConfig.buttonRb;
+            case KeyEvent.KEYCODE_BUTTON_SELECT:
+                return externalControllerConfig.buttonBack;
+            case KeyEvent.KEYCODE_BUTTON_START:
+                return externalControllerConfig.buttonStart;
+            case KeyEvent.KEYCODE_BUTTON_THUMBL:
+                return externalControllerConfig.buttonLStick;
+            case KeyEvent.KEYCODE_BUTTON_THUMBR:
+                return externalControllerConfig.buttonRStick;
+            default:
+                return null;
+        }
+    }
+
+    private boolean handleDpadKey(int keyCode, boolean pressed) {
+        int bit;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+                bit = 0x1;
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                bit = 0x2;
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                bit = 0x4;
+                break;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                bit = 0x8;
+                break;
+            default:
+                return false;
+        }
+
+        if (pressed) {
+            dpadState |= bit;
+        } else {
+            dpadState &= ~bit;
+        }
+        InputNativeInterface.sendJoystickDpad(0, (char) dpadState);
+        return true;
+    }
+
+    private float applyDeadZone(float value) {
+        float deadZone = Math.clamp(externalControllerConfig.axisDeadZone, 0f, 0.95f);
+        if (Math.abs(value) < deadZone) {
+            return 0f;
+        }
+        return value;
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        InputDevice device = event.getDevice();
+        if (!isFromGamepad(device, event.getSource())) {
+            return super.dispatchKeyEvent(event);
+        }
+
+        if (!externalControllerConfig.enabled) {
+            return super.dispatchKeyEvent(event);
+        }
+
+        int action = event.getAction();
+        if (action != KeyEvent.ACTION_DOWN && action != KeyEvent.ACTION_UP) {
+            return super.dispatchKeyEvent(event);
+        }
+
+        if (action == KeyEvent.ACTION_DOWN && event.getRepeatCount() > 0) {
+            return true;
+        }
+
+        ensureJoystickConnected();
+
+        if (handleDpadKey(event.getKeyCode(), action == KeyEvent.ACTION_DOWN)) {
+            return true;
+        }
+
+        GLFWBinding binding = getMappedButtonForKeyCode(event.getKeyCode());
+        if (binding != null) {
+            sendMappedButton(binding, action == KeyEvent.ACTION_DOWN);
+            return true;
+        }
+
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L2) {
+            sendMappedAxis(externalControllerConfig.axisLeftTrigger, action == KeyEvent.ACTION_DOWN ? 1f : 0f);
+            return true;
+        }
+
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_R2) {
+            sendMappedAxis(externalControllerConfig.axisRightTrigger, action == KeyEvent.ACTION_DOWN ? 1f : 0f);
+            return true;
+        }
+
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        InputDevice device = event.getDevice();
+        if (!isFromGamepad(device, event.getSource())) {
+            return super.onGenericMotionEvent(event);
+        }
+
+        if (!externalControllerConfig.enabled || event.getAction() != MotionEvent.ACTION_MOVE) {
+            return super.onGenericMotionEvent(event);
+        }
+
+        ensureJoystickConnected();
+
+        float leftX = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_X));
+        float leftY = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_Y));
+        float rightX = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_Z));
+        float rightY = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_RZ));
+
+        float leftTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), 0f);
+        float rightTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), 0f);
+
+        sendMappedAxis(externalControllerConfig.axisLeftX, leftX);
+        sendMappedAxis(externalControllerConfig.axisLeftY, leftY);
+        sendMappedAxis(externalControllerConfig.axisRightX, rightX);
+        sendMappedAxis(externalControllerConfig.axisRightY, rightY);
+        sendMappedAxis(externalControllerConfig.axisLeftTrigger, applyDeadZone(leftTrigger));
+        sendMappedAxis(externalControllerConfig.axisRightTrigger, applyDeadZone(rightTrigger));
+        return true;
     }
 }
