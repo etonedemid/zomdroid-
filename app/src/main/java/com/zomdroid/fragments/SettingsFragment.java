@@ -10,6 +10,7 @@ import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.zomdroid.LauncherPreferences;
 import com.zomdroid.R;
@@ -109,6 +110,9 @@ public class SettingsFragment extends Fragment {
 
             }
         });
+
+        binding.settingsControllerConfigMb.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.controller_config_fragment));
     }
 
     @Override

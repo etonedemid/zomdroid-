@@ -12,6 +12,11 @@
         android:icon="@drawable/mt_icon_controller"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_open_controller_config_fragment"
+        android:title="@string/fragment_label_controller_config"
+        android:icon="@drawable/mt_icon_settings"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_open_wiki_fragment"
         android:title="@string/fragment_label_wiki"
         android:icon="@drawable/mt_icon_menu_book"
@@ -20,12 +25,6 @@
         android:id="@+id/action_manage_storage"
         android:title="@string/nav_menu_manage_storage"
         android:icon="@drawable/mt_icon_folder"
-        app:showAsAction="never"/>
-
-    <item
-        android:id="@+id/action_donate"
-        android:title="@string/nav_menu_donate"
-        android:icon="@drawable/mt_icon_heart"
         app:showAsAction="never"/>
 
 </menu>

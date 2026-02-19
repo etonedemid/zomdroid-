@@ -9,6 +9,7 @@
 
 - Supports **Project Zomboid Build 41** (tested on 41.78.16) and **Build 42** (up to 42.7, versions 42.8 and later are not supported) 
 - Supports **Lua mods**
+- Supports **external controllers** with remapping and input preview
 - Currently **single-player only**
 
 ## System requirements 
@@ -21,8 +22,7 @@
 
 Planned features in order of priority:
 
-1. Add external gamepad support
-2. Migrate to FEX-emu
+1. Migrate to FEX-emu
 ## Prebuilt binaries and JARs
 
 Prebuilt binaries and JARs are located in the `app/src/main/assets/dependencies` folder,  
@@ -32,6 +32,8 @@ All Zomdroid dependencies—**except Box64 and GLFW**—can be either:
 - Built from the [zomdroid-dependencies](https://github.com/liamelui/zomdroid-dependencies) repository  
   (Mesa, LWJGL, Assimp, JNIWrapper, GL4ES, zomdroid-agent), or
 - Downloaded from official sources (FMOD, standard GNU/Linux libraries, JRE from PojavLauncherTeam, SQLite JDBC)
+
+External controller support/remapping is implemented in the Android launcher input layer and does not add new third-party runtime dependencies.
   
 ## Supporting Development
 
