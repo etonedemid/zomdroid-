@@ -15,6 +15,8 @@ public class ExternalControllerConfig {
 
     public boolean enabled = true;
     public float axisDeadZone = 0.2f;
+    // When false, in-game overlay controls (touch UI) are disabled/hidden
+    public boolean overlayControlsEnabled = true;
 
     public GLFWBinding buttonA = GLFWBinding.GAMEPAD_BUTTON_A;
     public GLFWBinding buttonB = GLFWBinding.GAMEPAD_BUTTON_B;
@@ -85,6 +87,8 @@ public class ExternalControllerConfig {
         axisRightY = GLFWBinding.GAMEPAD_AXIS_RY;
         axisLeftTrigger = GLFWBinding.GAMEPAD_AXIS_LT;
         axisRightTrigger = GLFWBinding.GAMEPAD_AXIS_RT;
+
+        overlayControlsEnabled = true;
 
         save();
     }

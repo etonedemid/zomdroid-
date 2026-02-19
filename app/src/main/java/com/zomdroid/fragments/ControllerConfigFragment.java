@@ -50,6 +50,19 @@ public class ControllerConfigFragment extends Fragment {
             config.save();
         });
 
+        // Overlay controls toggle for external controller config
+        // This lets users disable in-game overlay controls when using an external controller
+        // Add and wire the switch if the view exists in layout (we'll add it to XML next)
+        try {
+            binding.controllerConfigOverlayControlsMs.setChecked(config.overlayControlsEnabled);
+            binding.controllerConfigOverlayControlsMs.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                config.overlayControlsEnabled = isChecked;
+                config.save();
+            });
+        } catch (Exception ignored) {
+            // If the view isn't present (older layout), ignore and continue
+        }
+
         binding.controllerConfigDeadzoneSb.setProgress((int) (config.axisDeadZone * 100f));
         updateDeadZoneText();
         binding.controllerConfigDeadzoneSb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
