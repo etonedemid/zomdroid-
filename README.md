@@ -21,13 +21,8 @@
 ## Roadmap
 
 Planned features in order of priority:
-
-<<<<<<< HEAD
-1. Migrate to FEX-emu
-=======
  UI refinement, request features on discord: @etonedemid or my mail etonedemid@gmail.com
-
->>>>>>> 1e8a9fdd780e1804c5eeda1b4e07cc8d351de242
+ 
 ## Prebuilt binaries and JARs
 
 Prebuilt binaries and JARs are located in the `app/src/main/assets/dependencies` folder,  
