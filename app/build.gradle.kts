@@ -11,12 +11,16 @@ val localProperties = Properties().apply {
     }
 }
 
-val hasSigningConfig = listOf(
-    "RELEASE_STORE_FILE",
-    "RELEASE_STORE_PASSWORD",
-    "RELEASE_KEY_ALIAS",
-    "RELEASE_KEY_PASSWORD"
-).all { localProperties[it] != null }
+fun signingProp(key: String): String? =
+    System.getenv(key) ?: localProperties[key]?.toString()
+
+val releaseStoreFile = signingProp("RELEASE_STORE_FILE")
+val releaseStorePassword = signingProp("RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = signingProp("RELEASE_KEY_ALIAS")
+val releaseKeyPassword = signingProp("RELEASE_KEY_PASSWORD")
+
+val hasSigningConfig = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword)
+    .all { it != null }
 
 android {
     namespace = "com.zomdroid"
@@ -25,11 +29,10 @@ android {
     signingConfigs {
         if (hasSigningConfig) {
             create("release") {
-                storeFile = file(localProperties["RELEASE_STORE_FILE"].toString())
-                storePassword = localProperties["RELEASE_STORE_PASSWORD"].toString()
-                keyAlias = localProperties["RELEASE_KEY_ALIAS"].toString()
-                keyPassword = localProperties["RELEASE_KEY_PASSWORD"].toString()
-
+                storeFile = file(requireNotNull(releaseStoreFile) { "RELEASE_STORE_FILE must not be null" })
+                storePassword = requireNotNull(releaseStorePassword) { "RELEASE_STORE_PASSWORD must not be null" }
+                keyAlias = requireNotNull(releaseKeyAlias) { "RELEASE_KEY_ALIAS must not be null" }
+                keyPassword = requireNotNull(releaseKeyPassword) { "RELEASE_KEY_PASSWORD must not be null" }
             }
         }
     }
@@ -38,8 +41,8 @@ android {
         applicationId = "com.zomdroid"
         minSdk = 30
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.4"
+        versionCode = 5
+        versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

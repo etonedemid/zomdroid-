@@ -47,49 +47,24 @@ jobs:
           find app/src/main/res/mipmap-* -type f \( -name 'ic_launcher_foreground.png' -o -name 'ic_launcher_monochrome_foreground.png' \) -exec cp icon.png {} \;
           
           echo "Icon files updated successfully"
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
       - name: Prepare release keystore (from secret)
         run: |
           if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
             echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.keystore"
-            ls -l "$HOME/release.keystore"
+            echo "RELEASE_STORE_FILE=$HOME/release.keystore" >> "$GITHUB_ENV"
+            echo "Release keystore decoded successfully"
           else
-            echo "No release keystore configured - skipping"
+            echo "No release keystore configured - release APK will be unsigned"
           fi
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
-      - name: Sign Release APK(s)
-        run: |
-          if [ ! -f "$HOME/release.keystore" ]; then
-            echo "No release keystore found - skipping signing"
-            exit 0
-          fi
-          set -euo pipefail
-          SDK_ROOT=${ANDROID_HOME}
-          # Install build tools 31.0.0 if not present
-          echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "build-tools;31.0.0" || true
-          BUILD_TOOLS=31.0.0
-          APK_DIR=app/build/outputs/apk/release
-          for APK in "$APK_DIR"/*.apk; do
-            # skip already-signed apks with -signed in name
-            BASENAME=$(basename "$APK")
-            if [[ "$BASENAME" == *-signed.apk ]]; then
-              echo "Skipping already-signed: $APK"
-              continue
-            fi
-            ALIGNED="$APK.dir-aligned.apk"
-            SIGNED="${APK%.apk}-signed.apk"
-            echo "Aligning $APK -> $ALIGNED"
-            "$SDK_ROOT/build-tools/$BUILD_TOOLS/zipalign" -v 4 "$APK" "$ALIGNED"
-            echo "Signing $ALIGNED -> $SIGNED"
-            "$SDK_ROOT/build-tools/$BUILD_TOOLS/apksigner" sign --ks "$HOME/release.keystore" --ks-pass "pass:$RELEASE_STORE_PASSWORD" --key-pass "pass:$RELEASE_KEY_PASSWORD" --out "$SIGNED" "$ALIGNED"
-            ls -l "$SIGNED"
-          done
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
