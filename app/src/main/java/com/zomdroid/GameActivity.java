@@ -41,10 +41,16 @@ public class GameActivity extends AppCompatActivity {
     private ActivityGameBinding binding;
     private Surface gameSurface;
     private static boolean isGameStarted = false;
+    private Thread gameThread;
     private GestureDetector gestureDetector;
     private ExternalControllerConfig externalControllerConfig;
-    private int dpadState = 0;
     private boolean sentJoystickConnected = false;
+    
+    // D-pad state tracking for analog input (HAT axes)
+    private boolean dpadUpPressed = false;
+    private boolean dpadDownPressed = false;
+    private boolean dpadLeftPressed = false;
+    private boolean dpadRightPressed = false;
 
     @SuppressLint({"UnsafeDynamicallyLoadedCode", "ClickableViewAccessibility"})
     @Override
@@ -166,14 +172,14 @@ public class GameActivity extends AppCompatActivity {
 
                 GameLauncher.setSurface(gameSurface, width, height);
                 if (!isGameStarted) {
-                    Thread thread = new Thread(() -> {
+                    gameThread = new Thread(() -> {
                         try {
                             GameLauncher.launch(gameInstance);
                         } catch (ErrnoException e) {
                             throw new RuntimeException(e);
                         }
                     });
-                    thread.start();
+                    gameThread.start();
                     isGameStarted = true;
                 }
             }
@@ -258,11 +264,6 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onBackPressed() {
-        showExitGameDialog();
-    }
-
     private void showExitGameDialog() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_close_game_title)
@@ -297,9 +298,23 @@ public class GameActivity extends AppCompatActivity {
         } catch (Throwable ignored) {
         }
 
+        // Wait for game thread to finish with a timeout
+        if (gameThread != null && gameThread.isAlive()) {
+            try {
+                gameThread.join(5000); // 5 second timeout
+            } catch (InterruptedException ignored) {
+            }
+        }
+
         isGameStarted = false;
         sentJoystickConnected = false;
-        dpadState = 0;
+        gameThread = null;
+        
+        // Reset D-pad state
+        dpadUpPressed = false;
+        dpadDownPressed = false;
+        dpadLeftPressed = false;
+        dpadRightPressed = false;
     }
 
     @Override
@@ -338,6 +353,15 @@ public class GameActivity extends AppCompatActivity {
             InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_RT.code, isPressed ? 1f : 0f);
             return;
         }
+        // D-pad must go through the dedicated sendJoystickDpad native API,
+        // not sendJoystickButton (which only handles indices 0-10).
+        if (binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_UP
+                || binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_DOWN
+                || binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_LEFT
+                || binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_RIGHT) {
+            sendDpadState();
+            return;
+        }
         InputNativeInterface.sendJoystickButton(binding.code, isPressed);
     }
 
@@ -373,31 +397,37 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private boolean handleDpadKey(int keyCode, boolean pressed) {
-        int bit;
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_UP:
-                bit = 0x1;
+                dpadUpPressed = pressed;
                 break;
             case KeyEvent.KEYCODE_DPAD_RIGHT:
-                bit = 0x2;
+                dpadRightPressed = pressed;
                 break;
             case KeyEvent.KEYCODE_DPAD_DOWN:
-                bit = 0x4;
+                dpadDownPressed = pressed;
                 break;
             case KeyEvent.KEYCODE_DPAD_LEFT:
-                bit = 0x8;
+                dpadLeftPressed = pressed;
                 break;
             default:
                 return false;
         }
-
-        if (pressed) {
-            dpadState |= bit;
-        } else {
-            dpadState &= ~bit;
-        }
-        InputNativeInterface.sendJoystickDpad(0, (char) dpadState);
+        sendDpadState();
         return true;
+    }
+
+    /**
+     * Sends the current D-pad state as a bitmask through the dedicated native D-pad API.
+     * Bits: 0=up, 1=right, 2=down, 3=left
+     */
+    private void sendDpadState() {
+        char state = 0;
+        if (dpadUpPressed)    state |= (1 << 0);
+        if (dpadRightPressed) state |= (1 << 1);
+        if (dpadDownPressed)  state |= (1 << 2);
+        if (dpadLeftPressed)  state |= (1 << 3);
+        InputNativeInterface.sendJoystickDpad(0, state);
     }
 
     private float applyDeadZone(float value) {
@@ -411,16 +441,34 @@ public class GameActivity extends AppCompatActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         InputDevice device = event.getDevice();
+        int keyCode = event.getKeyCode();
+        int action = event.getAction();
+        
+        if (action != KeyEvent.ACTION_DOWN && action != KeyEvent.ACTION_UP) {
+            return super.dispatchKeyEvent(event);
+        }
+        
+        // Check if it's a D-pad key
+        boolean isDpadKey = keyCode == KeyEvent.KEYCODE_DPAD_UP
+                || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                || keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
+        
+        // Handle D-pad if controller is enabled
+        if (isDpadKey && externalControllerConfig.enabled) {
+            Log.d(LOG_TAG, "D-pad key received: " + keyCode);
+            ensureJoystickConnected();
+            if (handleDpadKey(keyCode, action == KeyEvent.ACTION_DOWN)) {
+                return true;
+            }
+        }
+        
+        // Check if device is gamepad-like
         if (!isFromGamepad(device, event.getSource())) {
             return super.dispatchKeyEvent(event);
         }
 
         if (!externalControllerConfig.enabled) {
-            return super.dispatchKeyEvent(event);
-        }
-
-        int action = event.getAction();
-        if (action != KeyEvent.ACTION_DOWN && action != KeyEvent.ACTION_UP) {
             return super.dispatchKeyEvent(event);
         }
 
@@ -430,22 +478,23 @@ public class GameActivity extends AppCompatActivity {
 
         ensureJoystickConnected();
 
-        if (handleDpadKey(event.getKeyCode(), action == KeyEvent.ACTION_DOWN)) {
+        // D-pad already handled above, skip here
+        if (!isDpadKey && handleDpadKey(keyCode, action == KeyEvent.ACTION_DOWN)) {
             return true;
         }
 
-        GLFWBinding binding = getMappedButtonForKeyCode(event.getKeyCode());
+        GLFWBinding binding = getMappedButtonForKeyCode(keyCode);
         if (binding != null) {
             sendMappedButton(binding, action == KeyEvent.ACTION_DOWN);
             return true;
         }
 
-        if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L2) {
+        if (keyCode == KeyEvent.KEYCODE_BUTTON_L2) {
             sendMappedAxis(externalControllerConfig.axisLeftTrigger, action == KeyEvent.ACTION_DOWN ? 1f : 0f);
             return true;
         }
 
-        if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_R2) {
+        if (keyCode == KeyEvent.KEYCODE_BUTTON_R2) {
             sendMappedAxis(externalControllerConfig.axisRightTrigger, action == KeyEvent.ACTION_DOWN ? 1f : 0f);
             return true;
         }
@@ -473,6 +522,29 @@ public class GameActivity extends AppCompatActivity {
 
         float leftTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), 0f);
         float rightTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), 0f);
+
+        // Handle D-Pad (HAT_X and HAT_Y are typically used for D-Pad on analog controllers)
+        float hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
+        float hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
+        
+        // Handle D-Pad via HAT axes → dedicated native D-pad API
+        boolean dpadRightNow = hatX > 0.5f;
+        boolean dpadLeftNow = hatX < -0.5f;
+        boolean dpadDownNow = hatY > 0.5f;
+        boolean dpadUpNow = hatY < -0.5f;
+
+        boolean dpadChanged = (dpadRightNow != dpadRightPressed)
+                || (dpadLeftNow != dpadLeftPressed)
+                || (dpadDownNow != dpadDownPressed)
+                || (dpadUpNow != dpadUpPressed);
+
+        if (dpadChanged) {
+            dpadRightPressed = dpadRightNow;
+            dpadLeftPressed = dpadLeftNow;
+            dpadDownPressed = dpadDownNow;
+            dpadUpPressed = dpadUpNow;
+            sendDpadState();
+        }
 
         sendMappedAxis(externalControllerConfig.axisLeftX, leftX);
         sendMappedAxis(externalControllerConfig.axisLeftY, leftY);

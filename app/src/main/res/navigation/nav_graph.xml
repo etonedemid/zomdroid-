@@ -17,8 +17,8 @@
             android:id="@id/action_open_settings_fragment"
             app:destination="@id/settings_fragment"/>
         <action
-            android:id="@id/action_open_wiki_fragment"
-            app:destination="@id/wiki_fragment"/>
+            android:id="@id/action_open_guide_fragment"
+            app:destination="@id/guide_fragment"/>
         <action
             android:id="@id/action_open_controller_config_fragment"
             app:destination="@id/controller_config_fragment"/>
@@ -39,9 +39,9 @@
     </fragment>
 
     <fragment
-        android:id="@+id/wiki_fragment"
+        android:id="@+id/guide_fragment"
         android:name="com.zomdroid.fragments.WikiFragment"
-        android:label="@string/fragment_label_wiki">
+        android:label="@string/fragment_label_guide">
     </fragment>
 
     <fragment
