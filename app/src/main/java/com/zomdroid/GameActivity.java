@@ -8,6 +8,7 @@ import android.system.ErrnoException;
 import android.util.Log;
 import android.view.GestureDetector;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import android.content.Intent;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -250,13 +251,17 @@ public class GameActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // Show confirmation dialog to close the game and return to the menu
+        // Show confirmation dialog to return to the launcher menu (close game)
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_close_game_title)
                 .setMessage(R.string.dialog_close_game_message)
                 .setNegativeButton(R.string.dialog_button_cancel, (d, which) -> d.dismiss())
                 .setPositiveButton(R.string.dialog_button_ok, (d, which) -> {
-                    // finish activity and return to launcher/menu
+                    // Return to launcher menu — start LauncherActivity and finish GameActivity
+                    Intent intent = new Intent(this, LauncherActivity.class);
+                    // If launcher already exists, bring it to front instead of creating a new instance
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
                     finish();
                 })
                 .setCancelable(true)
