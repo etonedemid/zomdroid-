@@ -47,25 +47,68 @@ jobs:
           find app/src/main/res/mipmap-* -type f \( -name 'ic_launcher_foreground.png' -o -name 'ic_launcher_monochrome_foreground.png' \) -exec cp icon.png {} \;
           
           echo "Icon files updated successfully"
-      - name: Prepare release keystore (from secret)
+      - name: Prepare release keystore
         run: |
+          set -euo pipefail
+
+          STORE_FILE="$HOME/release.keystore"
+          STORE_PASSWORD="${RELEASE_STORE_PASSWORD:-}"
+          KEY_ALIAS="${RELEASE_KEY_ALIAS:-}"
+          KEY_PASSWORD="${RELEASE_KEY_PASSWORD:-}"
+
           if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
-            echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.keystore"
-            echo "RELEASE_STORE_FILE=$HOME/release.keystore" >> "$GITHUB_ENV"
-            echo "Release keystore decoded successfully"
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$STORE_FILE"
+            echo "Using release keystore from secret"
           else
-            echo "No release keystore configured - release APK will be unsigned"
+            echo "No RELEASE_KEYSTORE_BASE64 provided, generating CI keystore"
+
+            if [ -z "$STORE_PASSWORD" ]; then
+              STORE_PASSWORD="ci-release-password"
+            fi
+            if [ -z "$KEY_ALIAS" ]; then
+              KEY_ALIAS="ci-release-key"
+            fi
+            if [ -z "$KEY_PASSWORD" ]; then
+              KEY_PASSWORD="$STORE_PASSWORD"
+            fi
+
+            keytool -genkeypair -v \
+              -keystore "$STORE_FILE" \
+              -storepass "$STORE_PASSWORD" \
+              -alias "$KEY_ALIAS" \
+              -keypass "$KEY_PASSWORD" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=CI Release,O=Zomdroid,C=US"
           fi
+
+          if [ -z "$STORE_PASSWORD" ]; then
+            echo "RELEASE_STORE_PASSWORD secret is required when RELEASE_KEYSTORE_BASE64 is provided"
+            exit 1
+          fi
+          if [ -z "$KEY_ALIAS" ]; then
+            echo "RELEASE_KEY_ALIAS secret is required when RELEASE_KEYSTORE_BASE64 is provided"
+            exit 1
+          fi
+          if [ -z "$KEY_PASSWORD" ]; then
+            echo "RELEASE_KEY_PASSWORD secret is required when RELEASE_KEYSTORE_BASE64 is provided"
+            exit 1
+          fi
+
+          echo "RELEASE_STORE_FILE=$STORE_FILE" >> "$GITHUB_ENV"
+          echo "RELEASE_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
-        env:
-          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
