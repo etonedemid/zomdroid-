@@ -89,9 +89,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            app/build/outputs/apk/release/*-signed.apk
-            app/build/outputs/apk/release/*.apk
+          files: app/build/outputs/apk/release/*.apk
           draft: false
           prerelease: false
         env:
