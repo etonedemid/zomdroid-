@@ -1,6 +1,6 @@
-# Zomdroid++
+# Zomdroid-
 
-**Zomdroid++** is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.
+**Zomdroid-* is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.
 
 > [!NOTE]
 > This application is **not developed by The Indie Stone** and is **not affiliated with them** in any way.
