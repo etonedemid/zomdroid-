@@ -50,6 +50,15 @@ TRC20:  TLnPV1JCpLwMyTcnmHoRDXMmwLpcjoFsDc
 
 Please report issues or suggest features via GitHub Issues
 
+## CI release signing
+
+The GitHub Actions workflow in `.github/workflows/android.yml` always signs the release APK.
+
+- Preferred setup: add `RELEASE_KEYSTORE_BASE64`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, and `RELEASE_KEY_PASSWORD` in repository secrets.
+- Fallback behavior: if `RELEASE_KEYSTORE_BASE64` is missing, CI generates a temporary keystore and signs the APK with it.
+
+For production releases and updates, use your persistent keystore secrets so signatures stay consistent across versions.
+
 ## Credits & Third-Party Sources
 
 - [Zomdroid](https://github.com/liamelui/zomdroid) - the base of the project
