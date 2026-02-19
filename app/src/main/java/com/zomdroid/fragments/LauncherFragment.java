@@ -150,7 +150,7 @@ public class LauncherFragment extends Fragment {
                                 .setMessage(R.string.game_files_missing)
                                 .setCancelable(true)
                                 .setPositiveButton(R.string.dialog_button_view_guide, (dialog, which) -> {
-                                    Navigation.findNavController(v).navigate(R.id.wiki_fragment);
+                                    Navigation.findNavController(v).navigate(R.id.guide_fragment);
                                 })
                                 .setNegativeButton(R.string.dialog_button_close, null)
                                 .create()
@@ -162,7 +162,7 @@ public class LauncherFragment extends Fragment {
                                 .setMessage(R.string.game_files_not_for_linux)
                                 .setCancelable(true)
                                 .setPositiveButton(R.string.dialog_button_view_guide, (dialog, which) -> {
-                                    Navigation.findNavController(v).navigate(R.id.wiki_fragment);
+                                    Navigation.findNavController(v).navigate(R.id.guide_fragment);
                                 })
                                 .setNegativeButton(R.string.dialog_button_close, null)
                                 .create()

@@ -75,6 +75,10 @@ public enum GLFWBinding {
     GAMEPAD_BUTTON_GUIDE(8),
     GAMEPAD_BUTTON_LSTICK(9),
     GAMEPAD_BUTTON_RSTICK(10),
+    GAMEPAD_BUTTON_DPAD_UP(11),
+    GAMEPAD_BUTTON_DPAD_DOWN(12),
+    GAMEPAD_BUTTON_DPAD_LEFT(13),
+    GAMEPAD_BUTTON_DPAD_RIGHT(14),
 
     /* special button bindings for triggers, since technically they are axes */
     GAMEPAD_LTRIGGER(-1),

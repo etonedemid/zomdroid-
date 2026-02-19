@@ -158,7 +158,7 @@ public class NewGameInstanceFragment extends Fragment {
                 android.R.layout.simple_spinner_dropdown_item, PresetManager.getPresets()));
 
         binding.newGameInstanceFilesHelpIb.setOnClickListener(v -> {
-            Navigation.findNavController(v).navigate(R.id.wiki_fragment);
+            Navigation.findNavController(v).navigate(R.id.guide_fragment);
         });
 
         binding.newGameInstanceFilesBrowseIb.setOnClickListener(v -> {

@@ -28,6 +28,10 @@ public class ExternalControllerConfig {
     public GLFWBinding buttonStart = GLFWBinding.GAMEPAD_BUTTON_START;
     public GLFWBinding buttonLStick = GLFWBinding.GAMEPAD_BUTTON_LSTICK;
     public GLFWBinding buttonRStick = GLFWBinding.GAMEPAD_BUTTON_RSTICK;
+    public GLFWBinding buttonDpadUp = GLFWBinding.GAMEPAD_BUTTON_DPAD_UP;
+    public GLFWBinding buttonDpadDown = GLFWBinding.GAMEPAD_BUTTON_DPAD_DOWN;
+    public GLFWBinding buttonDpadLeft = GLFWBinding.GAMEPAD_BUTTON_DPAD_LEFT;
+    public GLFWBinding buttonDpadRight = GLFWBinding.GAMEPAD_BUTTON_DPAD_RIGHT;
 
     public GLFWBinding axisLeftX = GLFWBinding.GAMEPAD_AXIS_LX;
     public GLFWBinding axisLeftY = GLFWBinding.GAMEPAD_AXIS_LY;
@@ -76,6 +80,10 @@ public class ExternalControllerConfig {
         buttonY = GLFWBinding.GAMEPAD_BUTTON_Y;
         buttonLb = GLFWBinding.GAMEPAD_BUTTON_LB;
         buttonRb = GLFWBinding.GAMEPAD_BUTTON_RB;
+        buttonDpadUp = GLFWBinding.GAMEPAD_BUTTON_DPAD_UP;
+        buttonDpadDown = GLFWBinding.GAMEPAD_BUTTON_DPAD_DOWN;
+        buttonDpadLeft = GLFWBinding.GAMEPAD_BUTTON_DPAD_LEFT;
+        buttonDpadRight = GLFWBinding.GAMEPAD_BUTTON_DPAD_RIGHT;
         buttonBack = GLFWBinding.GAMEPAD_BUTTON_BACK;
         buttonStart = GLFWBinding.GAMEPAD_BUTTON_START;
         buttonLStick = GLFWBinding.GAMEPAD_BUTTON_LSTICK;
@@ -106,6 +114,10 @@ public class ExternalControllerConfig {
                 GLFWBinding.GAMEPAD_BUTTON_GUIDE,
                 GLFWBinding.GAMEPAD_BUTTON_LSTICK,
                 GLFWBinding.GAMEPAD_BUTTON_RSTICK,
+                GLFWBinding.GAMEPAD_BUTTON_DPAD_UP,
+                GLFWBinding.GAMEPAD_BUTTON_DPAD_DOWN,
+                GLFWBinding.GAMEPAD_BUTTON_DPAD_LEFT,
+                GLFWBinding.GAMEPAD_BUTTON_DPAD_RIGHT,
                 GLFWBinding.GAMEPAD_LTRIGGER,
                 GLFWBinding.GAMEPAD_RTRIGGER,
         };
