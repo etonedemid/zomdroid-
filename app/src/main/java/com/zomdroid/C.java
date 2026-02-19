@@ -26,13 +26,15 @@ public class C {
         public static final String DEFAULT_CONTROLS = "default_controls.json";
     }
 
-    public static class shprefs {
-        public static final String NAME = "com.zomdroid.PREFS";
+        public static class shprefs {
+            public static final String NAME = "com.zomdroid.PREFS";
 
-        public static class keys {
-            public static final String LAUNCHER_VERSION = "launcherVersion";
-            public static final String INPUT_CONTROLS = "inputControls";
-            public static final String EXTERNAL_CONTROLLER_CONFIG = "externalControllerConfig";
+            public static class keys {
+                public static final String LAUNCHER_VERSION = "launcherVersion";
+                public static final String INPUT_CONTROLS = "inputControls";
+                public static final String OVERLAY_ENABLED = "overlayEnabled";
+                public static final String OVERLAY_OPACITY = "overlayOpacity"; // percent 0..100
+                public static final String EXTERNAL_CONTROLLER_CONFIG = "externalControllerConfig";
             public static final String GAME_INSTANCES = "gameInstances";
             public static final String LAUNCHER_PREFS = "launcherPrefs";
             public static final String INSTALLED_BUNDLES = "installedBundles";
