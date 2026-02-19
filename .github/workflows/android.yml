@@ -15,8 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: false
           fetch-depth: 0
+      - name: Fetch latest submodules
+        run: git submodule update --init --remote --recursive
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:

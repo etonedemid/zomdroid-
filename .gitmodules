@@ -5,3 +5,4 @@
 [submodule "app/src/main/cpp/glfw"]
 	path = app/src/main/cpp/glfw
 	url = https://github.com/liamelui/zomdroid-glfw.git
+	branch = zomdroid-on-master
