@@ -1,6 +1,6 @@
 # Zomdroid-
 
-**Zomdroid-* is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.
+**Zomdroid-* is a launcher for [Project Zomboid](https://projectzomboid.com) on mobile Android devices.*
 
 > [!NOTE]
 > This application is **not developed by The Indie Stone** and is **not affiliated with them** in any way.
@@ -21,8 +21,8 @@
 
 Planned features in order of priority:
 
-1. Add external gamepad support
-2. Migrate to FEX-emu
+ UI refinement, request features on discord: @etonedemid or my mail etonedemid@gmail.com
+
 ## Prebuilt binaries and JARs
 
 Prebuilt binaries and JARs are located in the `app/src/main/assets/dependencies` folder,  
