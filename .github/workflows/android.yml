@@ -30,6 +30,22 @@ jobs:
           echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/28.0.13004108" >> "$GITHUB_ENV"
       - name: Grant execute on gradlew
         run: chmod +x ./gradlew
+      - name: Apply custom app icon
+        run: |
+          set -e
+          
+          # Check if icon.png exists
+          if [ ! -f "icon.png" ]; then
+            echo "Error: icon.png not found in repository root" >&2
+            exit 1
+          fi
+          
+          echo "Replacing launcher icon resource files with custom icon.png"
+          
+          # Replace all launcher icon foreground and monochrome images with the custom icon
+          find app/src/main/res/mipmap-* -type f \( -name 'ic_launcher_foreground.png' -o -name 'ic_launcher_monochrome_foreground.png' \) -exec cp icon.png {} \;
+          
+          echo "Icon files updated successfully"
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
       - name: Build Release APK
