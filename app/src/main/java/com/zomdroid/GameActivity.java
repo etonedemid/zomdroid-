@@ -298,18 +298,22 @@ public class GameActivity extends AppCompatActivity {
         } catch (Throwable ignored) {
         }
 
-        // Wait for game thread to finish with a timeout
+        // Wait for game thread to finish, then force-kill if still alive
         if (gameThread != null && gameThread.isAlive()) {
             try {
-                gameThread.join(5000); // 5 second timeout
+                gameThread.join(5000);
             } catch (InterruptedException ignored) {
+            }
+            if (gameThread != null && gameThread.isAlive()) {
+                Log.w(LOG_TAG, "Game thread did not exit in time, force-interrupting");
+                gameThread.interrupt();
             }
         }
 
         isGameStarted = false;
         sentJoystickConnected = false;
         gameThread = null;
-        
+
         // Reset D-pad state
         dpadUpPressed = false;
         dpadDownPressed = false;
@@ -318,11 +322,21 @@ public class GameActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        if (isFinishing()) {
-            cleanupGameRuntime();
+    protected void onPause() {
+        super.onPause();
+        // Destroy the surface so the native renderer pauses
+        try {
+            GameLauncher.destroySurface();
+        } catch (Throwable ignored) {
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        cleanupGameRuntime();
+        // Force-kill the process to ensure no native threads linger
         super.onDestroy();
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     public void setOverlayEnabled(boolean enabled) {

@@ -91,8 +91,8 @@
     <string name="controller_config_waiting_for_input">Press input for %1$s…</string>
     <string name="controller_config_mapped_to">%1$s → %2$s</string>
     <string name="controller_config_capture_title">Mapping: %1$s</string>
-    <string name="controller_config_capture_button_instruction">Press a button on your controller.\n\nD-Pad directions and triggers are also supported.</string>
-    <string name="controller_config_capture_axis_instruction">Move a stick or pull a trigger on your controller.</string>
+    <string name="controller_config_capture_button_instruction">Press a button…</string>
+    <string name="controller_config_capture_axis_instruction">Move a stick or trigger…</string>
 
     <string name="controller_config_physical_a">Physical A</string>
     <string name="controller_config_physical_b">Physical B</string>
