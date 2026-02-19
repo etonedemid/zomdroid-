@@ -44,8 +44,7 @@ public class LauncherActivity extends AppCompatActivity {
                         v.getPaddingLeft(),
                         insets.top,
                         v.getPaddingRight(),
-                        //v.getPaddingBottom()
-                        insets.bottom
+                    v.getPaddingBottom()
                 );
 
                 return windowInsets;

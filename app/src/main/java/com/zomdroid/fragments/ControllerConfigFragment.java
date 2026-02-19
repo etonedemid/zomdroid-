@@ -7,15 +7,14 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.button.MaterialButton;
 import com.zomdroid.R;
 import com.zomdroid.databinding.ElementControllerMappingRowBinding;
 import com.zomdroid.databinding.FragmentControllerConfigBinding;
@@ -23,8 +22,28 @@ import com.zomdroid.input.ExternalControllerConfig;
 import com.zomdroid.input.GLFWBinding;
 
 public class ControllerConfigFragment extends Fragment {
+    private static final float AXIS_CAPTURE_THRESHOLD = 0.6f;
+
+    private static class BindingCaptureSession {
+        final int labelRes;
+        final GLFWBinding[] options;
+        final BindingAccessor accessor;
+        final MaterialButton valueButton;
+        final boolean axisCapture;
+
+        BindingCaptureSession(int labelRes, GLFWBinding[] options, BindingAccessor accessor,
+                              MaterialButton valueButton, boolean axisCapture) {
+            this.labelRes = labelRes;
+            this.options = options;
+            this.accessor = accessor;
+            this.valueButton = valueButton;
+            this.axisCapture = axisCapture;
+        }
+    }
+
     private FragmentControllerConfigBinding binding;
     private ExternalControllerConfig config;
+    private BindingCaptureSession activeCapture;
 
     interface BindingAccessor {
         GLFWBinding get();
@@ -86,6 +105,7 @@ public class ControllerConfigFragment extends Fragment {
         addAxisRows();
 
         binding.controllerConfigResetMb.setOnClickListener(v -> {
+            activeCapture = null;
             config.resetToDefaults();
             binding.controllerConfigButtonMappingsContainer.removeAllViews();
             binding.controllerConfigAxisMappingsContainer.removeAllViews();
@@ -98,6 +118,10 @@ public class ControllerConfigFragment extends Fragment {
 
         binding.controllerConfigRootLl.requestFocus();
         binding.controllerConfigRootLl.setOnKeyListener((v, keyCode, event) -> {
+            if (!isFromGamepad(event)) {
+                return false;
+            }
+
             if (event.getAction() == KeyEvent.ACTION_DOWN || event.getAction() == KeyEvent.ACTION_UP) {
                 binding.controllerConfigPreviewTv.setText(getString(
                         R.string.controller_config_preview_button,
@@ -105,11 +129,23 @@ public class ControllerConfigFragment extends Fragment {
                         event.getAction() == KeyEvent.ACTION_DOWN ? getString(R.string.controller_config_state_down) : getString(R.string.controller_config_state_up)
                 ));
             }
-            return false;
+
+            if (activeCapture != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                GLFWBinding detected = detectBindingFromKeyCode(keyCode);
+                if (detected != null) {
+                    applyCapturedBinding(detected);
+                }
+            }
+
+            return true;
         });
 
         binding.controllerConfigRootLl.setOnGenericMotionListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_MOVE && isJoystickEvent(event)) {
+            if (!isJoystickEvent(event)) {
+                return false;
+            }
+
+            if (event.getAction() == MotionEvent.ACTION_MOVE) {
                 float leftX = event.getAxisValue(MotionEvent.AXIS_X);
                 float leftY = event.getAxisValue(MotionEvent.AXIS_Y);
                 float rightX = event.getAxisValue(MotionEvent.AXIS_Z);
@@ -121,9 +157,28 @@ public class ControllerConfigFragment extends Fragment {
                         R.string.controller_config_preview_axes,
                         leftX, leftY, rightX, rightY, leftTrigger, rightTrigger
                 ));
+
+                if (activeCapture != null) {
+                    GLFWBinding detected = activeCapture.axisCapture
+                            ? detectAxisBindingFromMotionEvent(event)
+                            : detectTriggerButtonBindingFromMotionEvent(event);
+                    if (detected != null) {
+                        applyCapturedBinding(detected);
+                    }
+                }
             }
-            return false;
+
+            return true;
         });
+    }
+
+    private boolean isFromGamepad(KeyEvent event) {
+        InputDevice device = event.getDevice();
+        int source = event.getSource();
+        return (source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+                || (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+                || (source & InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD
+                || (device != null && device.supportsSource(InputDevice.SOURCE_GAMEPAD));
     }
 
     private boolean isJoystickEvent(MotionEvent event) {
@@ -140,6 +195,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_a,
                 ExternalControllerConfig.buttonOptions(),
+                false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -156,6 +212,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_b,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -172,6 +229,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_x,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -188,6 +246,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_y,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -204,6 +263,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_lb,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -220,6 +280,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_rb,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -236,6 +297,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_back,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -252,6 +314,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_start,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -268,6 +331,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_l3,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -284,6 +348,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigButtonMappingsContainer,
                 R.string.controller_config_physical_r3,
                 ExternalControllerConfig.buttonOptions(),
+            false,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -303,6 +368,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigAxisMappingsContainer,
                 R.string.controller_config_axis_left_x,
                 ExternalControllerConfig.axisOptions(),
+                true,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -319,6 +385,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigAxisMappingsContainer,
                 R.string.controller_config_axis_left_y,
                 ExternalControllerConfig.axisOptions(),
+            true,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -335,6 +402,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigAxisMappingsContainer,
                 R.string.controller_config_axis_right_x,
                 ExternalControllerConfig.axisOptions(),
+            true,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -351,6 +419,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigAxisMappingsContainer,
                 R.string.controller_config_axis_right_y,
                 ExternalControllerConfig.axisOptions(),
+            true,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -367,6 +436,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigAxisMappingsContainer,
                 R.string.controller_config_axis_left_trigger,
                 ExternalControllerConfig.axisOptions(),
+            true,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -383,6 +453,7 @@ public class ControllerConfigFragment extends Fragment {
                 binding.controllerConfigAxisMappingsContainer,
                 R.string.controller_config_axis_right_trigger,
                 ExternalControllerConfig.axisOptions(),
+            true,
                 new BindingAccessor() {
                     @Override
                     public GLFWBinding get() {
@@ -397,28 +468,150 @@ public class ControllerConfigFragment extends Fragment {
         );
     }
 
-    private void addMappingRow(LinearLayout parent, int labelRes, GLFWBinding[] options, BindingAccessor accessor) {
+    private void addMappingRow(LinearLayout parent, int labelRes, GLFWBinding[] options,
+                               boolean axisCapture, BindingAccessor accessor) {
         ElementControllerMappingRowBinding rowBinding = ElementControllerMappingRowBinding.inflate(getLayoutInflater(), parent, true);
         TextView labelTv = rowBinding.controllerMappingLabelTv;
-        Spinner valueS = rowBinding.controllerMappingValueS;
+        MaterialButton valueMb = rowBinding.controllerMappingValueMb;
 
         labelTv.setText(labelRes);
+        valueMb.setText(formatBindingName(accessor.get()));
+        valueMb.setOnClickListener(v -> startCapture(labelRes, options, axisCapture, accessor, valueMb));
+    }
 
-        ArrayAdapter<GLFWBinding> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, options);
-        valueS.setAdapter(adapter);
-        valueS.setSelection(adapter.getPosition(accessor.get()));
-        valueS.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(android.widget.AdapterView<?> parentView, View selectedView, int position, long id) {
-                GLFWBinding selected = (GLFWBinding) parentView.getSelectedItem();
-                accessor.set(selected);
-                config.save();
-            }
+    private void startCapture(int labelRes, GLFWBinding[] options, boolean axisCapture,
+                              BindingAccessor accessor, MaterialButton valueButton) {
+        activeCapture = new BindingCaptureSession(labelRes, options, accessor, valueButton, axisCapture);
+        binding.controllerConfigPreviewTv.setText(
+                getString(R.string.controller_config_waiting_for_input, getString(labelRes))
+        );
+        binding.controllerConfigRootLl.requestFocus();
+    }
 
-            @Override
-            public void onNothingSelected(android.widget.AdapterView<?> parentView) {
+    private void applyCapturedBinding(GLFWBinding detectedBinding) {
+        if (activeCapture == null || !containsBinding(activeCapture.options, detectedBinding)) {
+            return;
+        }
+
+        BindingCaptureSession capture = activeCapture;
+        activeCapture = null;
+        capture.accessor.set(detectedBinding);
+        config.save();
+
+        String mappedName = formatBindingName(detectedBinding);
+        capture.valueButton.setText(mappedName);
+        binding.controllerConfigPreviewTv.setText(
+                getString(R.string.controller_config_mapped_to, getString(capture.labelRes), mappedName)
+        );
+    }
+
+    private boolean containsBinding(GLFWBinding[] options, GLFWBinding candidate) {
+        for (GLFWBinding option : options) {
+            if (option == candidate) {
+                return true;
             }
-        });
+        }
+        return false;
+    }
+
+    private String formatBindingName(GLFWBinding binding) {
+        String value = binding.name();
+        if (value.startsWith("GAMEPAD_BUTTON_")) {
+            value = value.substring("GAMEPAD_BUTTON_".length());
+        } else if (value.startsWith("GAMEPAD_AXIS_")) {
+            value = value.substring("GAMEPAD_AXIS_".length());
+        } else if (value.startsWith("GAMEPAD_")) {
+            value = value.substring("GAMEPAD_".length());
+        }
+        return value.replace('_', ' ');
+    }
+
+    private GLFWBinding detectBindingFromKeyCode(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BUTTON_A:
+                return GLFWBinding.GAMEPAD_BUTTON_A;
+            case KeyEvent.KEYCODE_BUTTON_B:
+                return GLFWBinding.GAMEPAD_BUTTON_B;
+            case KeyEvent.KEYCODE_BUTTON_X:
+                return GLFWBinding.GAMEPAD_BUTTON_X;
+            case KeyEvent.KEYCODE_BUTTON_Y:
+                return GLFWBinding.GAMEPAD_BUTTON_Y;
+            case KeyEvent.KEYCODE_BUTTON_L1:
+                return GLFWBinding.GAMEPAD_BUTTON_LB;
+            case KeyEvent.KEYCODE_BUTTON_R1:
+                return GLFWBinding.GAMEPAD_BUTTON_RB;
+            case KeyEvent.KEYCODE_BUTTON_SELECT:
+                return GLFWBinding.GAMEPAD_BUTTON_BACK;
+            case KeyEvent.KEYCODE_BUTTON_START:
+                return GLFWBinding.GAMEPAD_BUTTON_START;
+            case KeyEvent.KEYCODE_BUTTON_MODE:
+                return GLFWBinding.GAMEPAD_BUTTON_GUIDE;
+            case KeyEvent.KEYCODE_BUTTON_THUMBL:
+                return GLFWBinding.GAMEPAD_BUTTON_LSTICK;
+            case KeyEvent.KEYCODE_BUTTON_THUMBR:
+                return GLFWBinding.GAMEPAD_BUTTON_RSTICK;
+            case KeyEvent.KEYCODE_BUTTON_L2:
+                return GLFWBinding.GAMEPAD_LTRIGGER;
+            case KeyEvent.KEYCODE_BUTTON_R2:
+                return GLFWBinding.GAMEPAD_RTRIGGER;
+            default:
+                return null;
+        }
+    }
+
+    private GLFWBinding detectAxisBindingFromMotionEvent(MotionEvent event) {
+        GLFWBinding detected = null;
+        float max = AXIS_CAPTURE_THRESHOLD;
+
+        float leftX = Math.abs(event.getAxisValue(MotionEvent.AXIS_X));
+        if (leftX > max) {
+            max = leftX;
+            detected = GLFWBinding.GAMEPAD_AXIS_LX;
+        }
+
+        float leftY = Math.abs(event.getAxisValue(MotionEvent.AXIS_Y));
+        if (leftY > max) {
+            max = leftY;
+            detected = GLFWBinding.GAMEPAD_AXIS_LY;
+        }
+
+        float rightX = Math.abs(event.getAxisValue(MotionEvent.AXIS_Z));
+        if (rightX > max) {
+            max = rightX;
+            detected = GLFWBinding.GAMEPAD_AXIS_RX;
+        }
+
+        float rightY = Math.abs(event.getAxisValue(MotionEvent.AXIS_RZ));
+        if (rightY > max) {
+            max = rightY;
+            detected = GLFWBinding.GAMEPAD_AXIS_RY;
+        }
+
+        float leftTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), 0f);
+        if (leftTrigger > max) {
+            max = leftTrigger;
+            detected = GLFWBinding.GAMEPAD_AXIS_LT;
+        }
+
+        float rightTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), 0f);
+        if (rightTrigger > max) {
+            detected = GLFWBinding.GAMEPAD_AXIS_RT;
+        }
+
+        return detected;
+    }
+
+    private GLFWBinding detectTriggerButtonBindingFromMotionEvent(MotionEvent event) {
+        float leftTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), 0f);
+        float rightTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), 0f);
+
+        if (leftTrigger >= AXIS_CAPTURE_THRESHOLD && leftTrigger >= rightTrigger) {
+            return GLFWBinding.GAMEPAD_LTRIGGER;
+        }
+        if (rightTrigger >= AXIS_CAPTURE_THRESHOLD) {
+            return GLFWBinding.GAMEPAD_RTRIGGER;
+        }
+        return null;
     }
 
     @Override

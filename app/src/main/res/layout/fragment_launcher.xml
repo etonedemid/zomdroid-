@@ -7,6 +7,10 @@
         android:id="@+id/game_instances_rv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"/>
+    android:clipToPadding="false"
+    android:paddingStart="@dimen/content_padding"
+    android:paddingTop="@dimen/content_padding_small"
+    android:paddingEnd="@dimen/content_padding"
+    android:paddingBottom="@dimen/content_padding_small"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
