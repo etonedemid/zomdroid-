@@ -21,7 +21,8 @@
 ## Roadmap
 
 Planned features in order of priority:
- UI refinement, request features on discord: @etonedemid or my mail etonedemid@gmail.com
+ UI refinement, Google Play release.
+ request features on discord: @etonedemid or my mail etonedemid@gmail.com
  
 ## Prebuilt binaries and JARs
 
