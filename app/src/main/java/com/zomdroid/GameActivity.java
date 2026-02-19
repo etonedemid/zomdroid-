@@ -187,6 +187,8 @@ public class GameActivity extends AppCompatActivity {
                         this.pointerId = pointerId;
                         InputNativeInterface.sendCursorPos(x * this.renderScale, y * this.renderScale);
                         InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, true);
+                        // if overlay is visible, prefer overlay touch handling (controls view) by returning false
+                        if (binding.inputControlsV.isOverlayEnabled()) return false;
                         return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
@@ -199,6 +201,7 @@ public class GameActivity extends AppCompatActivity {
                         float x = e.getX(pointerIndex);
                         float y = e.getY(pointerIndex);
                         InputNativeInterface.sendCursorPos(x * this.renderScale, y * this.renderScale);
+                        if (binding.inputControlsV.isOverlayEnabled()) return false;
                         return false;
                     }
                     case MotionEvent.ACTION_UP: {

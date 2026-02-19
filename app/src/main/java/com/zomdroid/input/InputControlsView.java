@@ -38,6 +38,8 @@ public class InputControlsView extends View {
     GestureDetector gestureDetector;
     private Gson gson = new Gson();
     private SharedPreferences sharedPreferences;
+    private boolean overlayEnabled = true;
+    private int overlayOpacityPercent = 100; // 0..100
 
     private ElementSettingsController elementSettingsController;
 
@@ -225,6 +227,38 @@ public class InputControlsView extends View {
                 this.controlElements.add(AbstractControlElement.fromDescription(this, description));
             }
         }
+
+        // load overlay prefs
+        this.overlayEnabled = this.sharedPreferences.getBoolean(C.shprefs.keys.OVERLAY_ENABLED, true);
+        this.overlayOpacityPercent = this.sharedPreferences.getInt(C.shprefs.keys.OVERLAY_OPACITY, 100);
+        applyOverlayOpacityToElements();
+    }
+
+    private void applyOverlayOpacityToElements() {
+        int alpha = Math.round((float) overlayOpacityPercent / 100f * 255f);
+        for (AbstractControlElement element : controlElements) {
+            element.setAlpha(alpha);
+        }
+        invalidate();
+    }
+
+    public void setOverlayEnabled(boolean enabled) {
+        this.overlayEnabled = enabled;
+        this.setVisibility(enabled ? VISIBLE : GONE);
+    }
+
+    public boolean isOverlayEnabled() {
+        return this.overlayEnabled;
+    }
+
+    public void setOverlayOpacityPercent(int percent) {
+        this.overlayOpacityPercent = Math.max(0, Math.min(100, percent));
+        this.sharedPreferences.edit().putInt(C.shprefs.keys.OVERLAY_OPACITY, this.overlayOpacityPercent).apply();
+        applyOverlayOpacityToElements();
+    }
+
+    public int getOverlayOpacityPercent() {
+        return this.overlayOpacityPercent;
     }
 
     public void saveControlElementsToDisk() {
