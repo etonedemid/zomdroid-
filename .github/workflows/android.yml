@@ -124,8 +124,7 @@ jobs:
       - name: Determine release info
         id: release_info
         run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          if echo "$COMMIT_MSG" | grep -qi "releaseready"; then
+          if [ "${{ github.event_name }}" = "push" ]; then
             VERSION=$(grep 'versionName = ' app/build.gradle.kts | sed 's/.*versionName = "\(.*\)".*/\1/')
             if [ -z "$VERSION" ]; then
               echo "::error::Could not extract versionName from app/build.gradle.kts"
