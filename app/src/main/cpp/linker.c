@@ -30,7 +30,7 @@ static void* (*loader_android_dlopen_ext)(const char* filename,
 static void* vulkan_driver_handle;
 static void* vulkan_loader_handle;
 
-static EmulatedLib jni_libs[] = {{.name = "PZClipper64"}, {.name = "PZBullet64"}, {.name = "PZBulletNoOpenGL64"}, {.name = "Lighting64"}, {.name = "PZPathFind64"}, {.name = "PZPopMan64"}, {.name = "fmodintegration64"}, { .name = "zomdroidtest"} };
+static EmulatedLib jni_libs[] = {{.name = "PZClipper64"}, {.name = "PZBullet64"}, {.name = "PZBulletNoOpenGL64"}, {.name = "Lighting64"}, {.name = "PZPathFind64"}, {.name = "PZPopMan64"}, {.name = "fmodintegration64"}, { .name = "zomdroidtest"}, {.name = "RakNet64"}, {.name = "ZNetNoSteam64"}, {.name = "ZNetJNI64"} };
 static int jni_lib_count = sizeof (jni_libs) / sizeof (EmulatedLib);
 
 

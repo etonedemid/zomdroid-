@@ -8,6 +8,7 @@
 
 typedef enum {
     KEYBOARD,
+    CHAR,
     CURSOR_POS,
     MOUSE_BUTTON,
     JOYSTICK_CONNECTED,
@@ -28,6 +29,11 @@ typedef struct {
     int key;
     bool is_pressed;
 } KeyboardEvent;
+
+typedef struct {
+    EventType type;
+    unsigned int codepoint;
+} CharEvent;
 
 typedef struct {
     EventType type;
@@ -75,6 +81,7 @@ typedef struct {
 typedef union {
     EventType type;
     KeyboardEvent keyboard;
+    CharEvent charEvent;
     CursorPosEvent cursorPos;
     MouseButtonEvent mouseButton;
     JoystickConnectedEvent joystickConnected;
