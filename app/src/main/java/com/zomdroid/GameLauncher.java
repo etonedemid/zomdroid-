@@ -67,6 +67,8 @@ public class GameLauncher {
         ArrayList<String> jvmArgs = gameInstance.getJvmArgsAsList();
         jvmArgs.add("-Dorg.lwjgl.opengl.libname=" + LauncherPreferences.requireSingleton().getRenderer().libName);
         jvmArgs.add("-Dzomdroid.renderer=" + LauncherPreferences.requireSingleton().getRenderer().name());
+        jvmArgs.add("-Dzomboid.steam=0"); // Use NoSteam networking (Steam cannot run on Android)
+        jvmArgs.add("-Dzomboid.znetlog=1"); // Enable networking debug logs
         //jvmArgs.add("-XX:+PrintFlagsFinal"); // for debugging
         jvmArgs.add("-XX:ErrorFile=/dev/stdout"); // print jvm crash report to stdout for now
 

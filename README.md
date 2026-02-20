@@ -10,7 +10,7 @@
 - Supports **Project Zomboid Build 41** (tested on 41.78.16) and **Build 42** (up to 42.7, versions 42.8 and later are not supported) 
 - Supports **Lua mods**
 - Supports **external controllers** with remapping and input preview
-- Currently **single-player only**
+- Supports **multiplayer** (direct IP connect, no Steam relay) — use the in-game Join Server menu
 
 ## System requirements 
 

@@ -24,8 +24,10 @@ public class LauncherPreferences {
     private AudioAPI audioAPI = AudioAPI.AAUDIO;
 
     LauncherPreferences() {
+        // Keep GL4ES as the default renderer on all devices.
+        // If KGSL is supported, prefer the Freedreno Vulkan driver,
+        // but do not change the renderer from GL4ES to ZINK.
         if (isKgslSupported()) {
-            this.renderer = Renderer.ZINK_ZFA;
             this.vulkanDriver = VulkanDriver.FREEDRENO;
         }
     }

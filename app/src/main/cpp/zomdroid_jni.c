@@ -95,6 +95,11 @@ Java_com_zomdroid_input_InputNativeInterface_sendKeyboard(JNIEnv *env, jclass cl
 }
 
 JNIEXPORT void JNICALL
+Java_com_zomdroid_input_InputNativeInterface_sendChar(JNIEnv *env, jclass clazz, jint codepoint) {
+    zomdroid_event_char((unsigned int) codepoint);
+}
+
+JNIEXPORT void JNICALL
 Java_com_zomdroid_input_InputNativeInterface_sendCursorPos(JNIEnv *env, jobject clazz, jdouble x, jdouble y) {
     zomdroid_event_cursor_pos(x, y);
 }
