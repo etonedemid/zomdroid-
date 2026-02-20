@@ -21,7 +21,7 @@
 ## Roadmap
 
 Planned features in order of priority:
- *Add multiplayer support*
+ *Add multiplayer support*,
  UI refinement, Google Play release.
  request features on discord: @etonedemid or my mail etonedemid@gmail.com
  
