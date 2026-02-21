@@ -52,9 +52,6 @@ public class GameActivity extends AppCompatActivity {
     private boolean dpadLeftPressed = false;
     private boolean dpadRightPressed = false;
 
-    // Hidden view that captures soft-keyboard input and forwards it to the native game
-    private KeyboardInputView keyboardInputView;
-
     @SuppressLint({"UnsafeDynamicallyLoadedCode", "ClickableViewAccessibility"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -264,38 +261,6 @@ public class GameActivity extends AppCompatActivity {
                 binding.getRoot().addView(toggle);
             });
         }
-
-        // Hidden 1x1 view used as the IME target for soft keyboard input
-        keyboardInputView = new KeyboardInputView(this);
-        binding.getRoot().addView(keyboardInputView,
-                new android.widget.FrameLayout.LayoutParams(1, 1));
-
-        // Keyboard button: fixed top-right corner, below the overlay toggle
-        binding.getRoot().post(() -> {
-            int kbBtnSize = (int) (56 * getResources().getDisplayMetrics().density);
-            int kbAlpha = Math.round(binding.inputControlsV.getOverlayOpacityPercent() / 100f * 255f);
-            android.widget.ImageButton kbBtn = new android.widget.ImageButton(this);
-            kbBtn.setImageResource(android.R.drawable.ic_menu_edit);
-            kbBtn.setBackgroundColor((kbAlpha << 24) | 0x000000);
-            kbBtn.setImageAlpha(kbAlpha);
-            android.widget.FrameLayout.LayoutParams kbParams =
-                    new android.widget.FrameLayout.LayoutParams(kbBtnSize, kbBtnSize);
-            kbParams.gravity = android.view.Gravity.TOP | android.view.Gravity.END;
-            // place below the overlay toggle button (size + 2*margin)
-            kbParams.setMargins(16, kbBtnSize + 32, 16, 16);
-            kbBtn.setLayoutParams(kbParams);
-            kbBtn.setOnClickListener(v -> {
-                keyboardInputView.requestFocus();
-                android.view.inputmethod.InputMethodManager imm =
-                        (android.view.inputmethod.InputMethodManager)
-                                getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-                if (imm != null) {
-                    imm.showSoftInput(keyboardInputView,
-                            android.view.inputmethod.InputMethodManager.SHOW_FORCED);
-                }
-            });
-            binding.getRoot().addView(kbBtn);
-        });
 
     }
 
@@ -604,78 +569,5 @@ public class GameActivity extends AppCompatActivity {
         return true;
     }
 
-    /**
-     * A zero-size focusable view that serves as the IME target for soft-keyboard input.
-     * Characters are forwarded to the native game via {@link InputNativeInterface#sendChar}.
-     * Special keys (Backspace / Enter / Escape) are forwarded via
-     * {@link InputNativeInterface#sendKeyboard} using GLFW key codes.
-     */
-    private static class KeyboardInputView extends android.view.View {
 
-        public KeyboardInputView(android.content.Context context) {
-            super(context);
-            setFocusable(true);
-            setFocusableInTouchMode(true);
-        }
-
-        @Override
-        public android.view.inputmethod.InputConnection onCreateInputConnection(
-                android.view.inputmethod.EditorInfo outAttrs) {
-            outAttrs.inputType = android.text.InputType.TYPE_CLASS_TEXT
-                    | android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
-            outAttrs.imeOptions = android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN
-                    | android.view.inputmethod.EditorInfo.IME_ACTION_NONE;
-            return new android.view.inputmethod.BaseInputConnection(this, false) {
-
-                @Override
-                public boolean commitText(CharSequence text, int newCursorPosition) {
-                    for (int i = 0; i < text.length(); ) {
-                        int cp = Character.codePointAt(text, i);
-                        InputNativeInterface.sendChar(cp);
-                        i += Character.charCount(cp);
-                    }
-                    return true;
-                }
-
-                @Override
-                public boolean deleteSurroundingText(int beforeLength, int afterLength) {
-                    // GLFW_KEY_BACKSPACE = 259
-                    for (int i = 0; i < beforeLength; i++) {
-                        InputNativeInterface.sendKeyboard(259, true);
-                        InputNativeInterface.sendKeyboard(259, false);
-                    }
-                    return true;
-                }
-
-                @Override
-                public boolean sendKeyEvent(KeyEvent event) {
-                    int action = event.getAction();
-                    boolean pressed = action == KeyEvent.ACTION_DOWN;
-                    switch (event.getKeyCode()) {
-                        case KeyEvent.KEYCODE_DEL:
-                            InputNativeInterface.sendKeyboard(259, pressed); // GLFW_KEY_BACKSPACE
-                            return true;
-                        case KeyEvent.KEYCODE_ENTER:
-                        case KeyEvent.KEYCODE_NUMPAD_ENTER:
-                            InputNativeInterface.sendKeyboard(257, pressed); // GLFW_KEY_ENTER
-                            return true;
-                        case KeyEvent.KEYCODE_ESCAPE:
-                            InputNativeInterface.sendKeyboard(256, pressed); // GLFW_KEY_ESCAPE
-                            return true;
-                        case KeyEvent.KEYCODE_TAB:
-                            InputNativeInterface.sendKeyboard(258, pressed); // GLFW_KEY_TAB
-                            return true;
-                        default:
-                            return super.sendKeyEvent(event);
-                    }
-                }
-            };
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            // Invisible 1x1 — never takes up visible space
-            setMeasuredDimension(1, 1);
-        }
-    }
 }

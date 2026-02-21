@@ -41,8 +41,8 @@ android {
         applicationId = "com.zomdroid.minus"
         minSdk = 30
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.8"
+        versionCode = 9
+        versionName = "1.8.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
