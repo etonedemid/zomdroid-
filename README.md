@@ -7,10 +7,10 @@
 
 ## Features
 
-- Supports **Project Zomboid Build 41** (tested on 41.78.16) and **Build 42** (up to 42.7, versions 42.8 and later are not supported) 
+- Supports **Project Zomboid Build 41** (tested on 41.78.7) and **Build 42** (up to 42.7, versions 42.8 and later are not supported) 
 - Supports **Lua mods**
 - Supports **external controllers** with remapping and input preview
-- Supports **multiplayer** (direct IP connect, no Steam relay) — use the in-game Join Server menu
+- Supports **multiplayer** (direct IP connect, no Steam relay)
 
 ## System requirements 
 
@@ -21,8 +21,8 @@
 ## Roadmap
 
 Planned features in order of priority:
- *Add multiplayer support*,
  UI refinement, Google Play release.
+ 
  request features on discord: @etonedemid or my mail etonedemid@gmail.com
  
 ## Prebuilt binaries and JARs
@@ -50,15 +50,6 @@ TRC20:  TLnPV1JCpLwMyTcnmHoRDXMmwLpcjoFsDc
 ## Feedback
 
 Please report issues or suggest features via GitHub Issues
-
-## CI release signing
-
-The GitHub Actions workflow in `.github/workflows/android.yml` always signs the release APK.
-
-- Preferred setup: add `RELEASE_KEYSTORE_BASE64`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, and `RELEASE_KEY_PASSWORD` in repository secrets.
-- Fallback behavior: if `RELEASE_KEYSTORE_BASE64` is missing, CI generates a temporary keystore and signs the APK with it.
-
-For production releases and updates, use your persistent keystore secrets so signatures stay consistent across versions.
 
 ## Credits & Third-Party Sources
 
