@@ -39,7 +39,9 @@ External controller support/remapping is implemented in the Android launcher inp
   
 ## Supporting Development
 
-This is an independent project, Donate if you wish to see this on Google Play!
+**Huge thanks to @Vannyk for supporting!**
+
+This is an independent project, Donate if you wish!
 
 [Ko-fi](https://ko-fi.com/etonedemid)
 
