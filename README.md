@@ -35,7 +35,7 @@ All Zomdroid dependencies—**except Box64 and GLFW**—can be either:
   (Mesa, LWJGL, Assimp, JNIWrapper, GL4ES, zomdroid-agent), or
 - Downloaded from official sources (FMOD, standard GNU/Linux libraries, JRE from PojavLauncherTeam, SQLite JDBC)
 
-External controller support/remapping is implemented in the Android launcher input layer and does not add new third-party runtime dependencies.
+phone
   
 ## Supporting Development
 
