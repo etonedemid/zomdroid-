@@ -71,6 +71,26 @@
     <string name="settings_resolution_scale">Resolution scale</string>
     <string name="settings_audio_api">Audio API</string>
     <string name="settings_controller_config">Open controller config</string>
+    <string name="settings_jvm_args">JVM arguments</string>
+    <string name="settings_env_vars">Environment variables</string>
+    <string name="settings_debug_mode">Debug mode</string>
+
+    <string name="jvm_args_dialog_title">JVM arguments</string>
+    <string name="jvm_args_dialog_message">Additional JVM arguments passed to the game on startup. One argument per line. Example:\n-Xmx4g\n-XX:+UseZGC</string>
+    <string name="settings_env_vars_dialog_message">Additional environment variables set before the game starts. One variable per line in KEY=VALUE format. Example:\nMESA_DEBUG=1\nBOX64_LOG=3</string>
+
+    <string name="vulkan_driver_freedreno">Freedreno</string>
+    <string name="vulkan_driver_freedreno_message">Freedreno is an open-source Vulkan driver for Qualcomm Adreno GPUs. Recommended for Adreno 6xx and older devices.</string>
+    <string name="vulkan_driver_freedreno_8xx_title">Freedreno 8xx (Experimental)</string>
+    <string name="vulkan_driver_freedreno_8xx_message">Experimental Freedreno driver for Adreno 8xx series GPUs (Snapdragon 8 Gen 2 and newer). Use only if the default Freedreno driver does not work.</string>
+    <string name="vulkan_driver_freedreno_840_title">Freedreno 840 v26</string>
+    <string name="vulkan_driver_freedreno_840_message">Freedreno driver variant for Adreno 840. For specific device compatibility; may cause issues on other GPUs.</string>
+    <string name="vulkan_driver_turnip_bbdd688_title">Turnip (bbdd688)</string>
+    <string name="vulkan_driver_turnip_bbdd688_message">Turnip is a community Vulkan driver for Adreno 7xx GPUs. This build targets Adreno 7xx series (non-8-gen-2). May improve performance on supported devices.</string>
+    <string name="vulkan_driver_turnip_8gen2_title">Turnip (bbdd688, 8 Gen 2)</string>
+    <string name="vulkan_driver_turnip_8gen2_message">Turnip driver build optimized for Snapdragon 8 Gen 2 (Adreno 740). Use only on the correct hardware.</string>
+    <string name="vulkan_driver_turnip_gmem_title">Turnip 25.1.3 GMEM</string>
+    <string name="vulkan_driver_turnip_gmem_message">Turnip 25.1.3 build with GMEM optimizations for Adreno 710. May improve performance on Snapdragon 7xx mid-range devices.</string>
 
     <string name="controller_config_enabled">Enable external controller</string>
     <string name="controller_config_overlay_controls">Enable overlay controls (touch UI)</string>

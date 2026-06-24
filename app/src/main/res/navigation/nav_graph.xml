@@ -36,6 +36,12 @@
         android:name="com.zomdroid.fragments.SettingsFragment"
         android:label="@string/fragment_label_settings"
         tools:layout="@layout/fragment_settings">
+        <action
+            android:id="@+id/action_settings_to_wiki"
+            app:destination="@id/guide_fragment" />
+        <action
+            android:id="@+id/action_settings_to_controller_config"
+            app:destination="@id/controller_config_fragment" />
     </fragment>
 
     <fragment
