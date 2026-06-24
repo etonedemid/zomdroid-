@@ -159,19 +159,31 @@ public abstract class AbstractControlElement {
 
     void handleGamepadBinding(GLFWBinding binding, boolean isPressed) {
         Log.v(LOG_TAG, "handleGamepadBinding binding=" + binding + " isPressed=" + isPressed);
-        if (binding.ordinal() >= GLFWBinding.GAMEPAD_MIN_ORDINAL
-                && binding.ordinal() <= GLFWBinding.GAMEPAD_MAX_ORDINAL) {
-            switch (binding) {
-                case GAMEPAD_LTRIGGER:
-                    InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_LT.code, isPressed ? 1 : 0);
-                    break;
-                case GAMEPAD_RTRIGGER:
-                    InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_RT.code, isPressed ? 1 : 0);
-                    break;
-                default:
-                    InputNativeInterface.sendJoystickButton(binding.code, isPressed);
-                    break;
+        switch (binding) {
+            case GAMEPAD_LTRIGGER:
+                InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_LT.code, isPressed ? 1 : 0);
+                break;
+            case GAMEPAD_RTRIGGER:
+                InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_RT.code, isPressed ? 1 : 0);
+                break;
+            case GAMEPAD_DPAD_UP:
+            case GAMEPAD_DPAD_DOWN:
+            case GAMEPAD_DPAD_LEFT:
+            case GAMEPAD_DPAD_RIGHT: {
+                char state = 0;
+                if (binding == GLFWBinding.GAMEPAD_DPAD_UP    && isPressed) state |= 0x01;
+                if (binding == GLFWBinding.GAMEPAD_DPAD_RIGHT && isPressed) state |= 0x02;
+                if (binding == GLFWBinding.GAMEPAD_DPAD_DOWN  && isPressed) state |= 0x04;
+                if (binding == GLFWBinding.GAMEPAD_DPAD_LEFT  && isPressed) state |= 0x08;
+                InputNativeInterface.sendJoystickDpad(0, state);
+                break;
             }
+            default:
+                if (binding.ordinal() >= GLFWBinding.GAMEPAD_BUTTON_A.ordinal()
+                        && binding.ordinal() <= GLFWBinding.GAMEPAD_BUTTON_RSTICK.ordinal()) {
+                    InputNativeInterface.sendJoystickButton(binding.code, isPressed);
+                }
+                break;
         }
     }
 
@@ -181,7 +193,7 @@ public abstract class AbstractControlElement {
                 && binding.ordinal() <= GLFWBinding.MOUSE_BUTTON_8.ordinal()) {
             InputNativeInterface.sendMouseButton(binding.code, isPressed);
         } else if (binding.ordinal() >= GLFWBinding.KEY_SPACE.ordinal()
-                && binding.ordinal() <= GLFWBinding.KEY_WORLD_2.ordinal()) {
+                && binding.ordinal() <= GLFWBinding.KEY_KP_EQUAL.ordinal()) {
             InputNativeInterface.sendKeyboard(binding.code, isPressed);
         }
     }

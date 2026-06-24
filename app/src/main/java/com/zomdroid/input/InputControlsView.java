@@ -127,7 +127,9 @@ public class InputControlsView extends View {
         super.onDraw(canvas);
 
         for (AbstractControlElement controlElement : controlElements) {
-            controlElement.draw(canvas);
+            if (isElementVisibleInMode(controlElement)) {
+                controlElement.draw(canvas);
+            }
         }
     }
 
@@ -145,7 +147,7 @@ public class InputControlsView extends View {
                 float x = e.getX();
                 float y = e.getY();
                 for (AbstractControlElement element : controlElements) {
-                    if (element.isPointOver(x, y)) {
+                    if (isElementVisibleInMode(element) && element.isPointOver(x, y)) {
                         pointerOverElement = element;
                         gestureDetector.setIsLongpressEnabled(false);
                         break;
@@ -155,7 +157,7 @@ public class InputControlsView extends View {
             return gestureDetector.onTouchEvent(e);
         } else {
             for (AbstractControlElement controlElement : controlElements) {
-                if (controlElement.handleMotionEvent(e)) {
+                if (isElementVisibleInMode(controlElement) && controlElement.handleMotionEvent(e)) {
                     return true;
                 }
             }
@@ -279,6 +281,42 @@ public class InputControlsView extends View {
 
     public void setElementSettingsController(ElementSettingsController elementSettingsController) {
         this.elementSettingsController = elementSettingsController;
+    }
+
+    public enum InputMode { ALL, MNK }
+
+    private Runnable keyboardToggleListener;
+    private boolean gamepadConnected = false;
+    private boolean keyboardConnected = false;
+    private float renderScale = 1f;
+    private InputMode currentInputMode = InputMode.ALL;
+
+    public void setKeyboardToggleListener(Runnable listener) {
+        this.keyboardToggleListener = listener;
+    }
+
+    public void setRenderScale(float scale) {
+        this.renderScale = scale;
+    }
+
+    public void setGamepadConnected(boolean connected) {
+        this.gamepadConnected = connected;
+    }
+
+    public void setKeyboardConnected(boolean connected) {
+        this.keyboardConnected = connected;
+    }
+
+    public void applyInputMode(InputMode mode) {
+        this.currentInputMode = mode;
+        invalidate();
+    }
+
+    private boolean isElementVisibleInMode(AbstractControlElement element) {
+        if (currentInputMode == InputMode.MNK) {
+            return element.getInputType() == AbstractControlElement.InputType.MNK;
+        }
+        return true;
     }
 
     @Override
