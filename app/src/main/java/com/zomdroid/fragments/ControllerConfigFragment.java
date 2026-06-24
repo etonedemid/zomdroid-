@@ -270,10 +270,10 @@ public class ControllerConfigFragment extends Fragment {
             case KeyEvent.KEYCODE_BUTTON_THUMBR:return GLFWBinding.GAMEPAD_BUTTON_RSTICK;
             case KeyEvent.KEYCODE_BUTTON_L2:    return GLFWBinding.GAMEPAD_LTRIGGER;
             case KeyEvent.KEYCODE_BUTTON_R2:    return GLFWBinding.GAMEPAD_RTRIGGER;
-            case KeyEvent.KEYCODE_DPAD_UP:      return GLFWBinding.GAMEPAD_BUTTON_DPAD_UP;
-            case KeyEvent.KEYCODE_DPAD_DOWN:    return GLFWBinding.GAMEPAD_BUTTON_DPAD_DOWN;
-            case KeyEvent.KEYCODE_DPAD_LEFT:    return GLFWBinding.GAMEPAD_BUTTON_DPAD_LEFT;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:   return GLFWBinding.GAMEPAD_BUTTON_DPAD_RIGHT;
+            case KeyEvent.KEYCODE_DPAD_UP:      return GLFWBinding.GAMEPAD_DPAD_UP;
+            case KeyEvent.KEYCODE_DPAD_DOWN:    return GLFWBinding.GAMEPAD_DPAD_DOWN;
+            case KeyEvent.KEYCODE_DPAD_LEFT:    return GLFWBinding.GAMEPAD_DPAD_LEFT;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:   return GLFWBinding.GAMEPAD_DPAD_RIGHT;
             default:                            return null;
         }
     }
@@ -283,10 +283,10 @@ public class ControllerConfigFragment extends Fragment {
         float hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
         float hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
 
-        if (hatX > 0.5f)  return GLFWBinding.GAMEPAD_BUTTON_DPAD_RIGHT;
-        if (hatX < -0.5f) return GLFWBinding.GAMEPAD_BUTTON_DPAD_LEFT;
-        if (hatY > 0.5f)  return GLFWBinding.GAMEPAD_BUTTON_DPAD_DOWN;
-        if (hatY < -0.5f) return GLFWBinding.GAMEPAD_BUTTON_DPAD_UP;
+        if (hatX > 0.5f)  return GLFWBinding.GAMEPAD_DPAD_RIGHT;
+        if (hatX < -0.5f) return GLFWBinding.GAMEPAD_DPAD_LEFT;
+        if (hatY > 0.5f)  return GLFWBinding.GAMEPAD_DPAD_DOWN;
+        if (hatY < -0.5f) return GLFWBinding.GAMEPAD_DPAD_UP;
 
         return null;
     }
