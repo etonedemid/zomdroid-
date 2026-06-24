@@ -52,6 +52,65 @@ public enum GLFWBinding {
     KEY_GRAVE_ACCENT(96),
     KEY_WORLD_1(161),
     KEY_WORLD_2(162),
+    KEY_PAGE_UP(266),
+    KEY_PAGE_DOWN(267),
+    KEY_HOME(268),
+    KEY_END(269),
+    KEY_UP(265),
+    KEY_DOWN(264),
+    KEY_LEFT(263),
+    KEY_RIGHT(262),
+    KEY_F1(290),
+    KEY_F2(291),
+    KEY_F3(292),
+    KEY_F4(293),
+    KEY_F5(294),
+    KEY_F6(295),
+    KEY_F7(296),
+    KEY_F8(297),
+    KEY_F9(298),
+    KEY_F10(299),
+    KEY_F11(300),
+    KEY_F12(301),
+
+    /* additional keyboard keys */
+    KEY_ESCAPE(256),
+    KEY_ENTER(257),
+    KEY_TAB(258),
+    KEY_BACKSPACE(259),
+    KEY_INSERT(260),
+    KEY_DELETE(261),
+    KEY_CAPS_LOCK(280),
+    KEY_SCROLL_LOCK(281),
+    KEY_NUM_LOCK(282),
+    KEY_PRINT_SCREEN(283),
+    KEY_PAUSE(284),
+    KEY_LEFT_SHIFT(340),
+    KEY_RIGHT_SHIFT(344),
+    KEY_LEFT_CONTROL(341),
+    KEY_RIGHT_CONTROL(345),
+    KEY_LEFT_ALT(342),
+    KEY_RIGHT_ALT(346),
+    KEY_LEFT_SUPER(343),
+    KEY_RIGHT_SUPER(347),
+
+    KEY_KP_0(320),
+    KEY_KP_1(321),
+    KEY_KP_2(322),
+    KEY_KP_3(323),
+    KEY_KP_4(324),
+    KEY_KP_5(325),
+    KEY_KP_6(326),
+    KEY_KP_7(327),
+    KEY_KP_8(328),
+    KEY_KP_9(329),
+    KEY_KP_ENTER(335),
+    KEY_KP_ADD(334),
+    KEY_KP_SUBTRACT(333),
+    KEY_KP_MULTIPLY(332),
+    KEY_KP_DIVIDE(331),
+    KEY_KP_DECIMAL(330),
+    KEY_KP_EQUAL(336),
 
     /* mouse buttons */
     MOUSE_BUTTON_LEFT(0),
@@ -62,6 +121,11 @@ public enum GLFWBinding {
     MOUSE_BUTTON_6(5),
     MOUSE_BUTTON_7(6),
     MOUSE_BUTTON_8(7),
+
+    MOUSE_WHEEL_UP(-110),
+    MOUSE_WHEEL_DOWN(-111),
+    UI_TOGGLE_OVERLAY(-100),
+    UI_TOGGLE_KEYBOARD(-101),
 
     /* gamepad buttons*/
     GAMEPAD_BUTTON_A(0),
@@ -75,10 +139,6 @@ public enum GLFWBinding {
     GAMEPAD_BUTTON_GUIDE(8),
     GAMEPAD_BUTTON_LSTICK(9),
     GAMEPAD_BUTTON_RSTICK(10),
-    GAMEPAD_BUTTON_DPAD_UP(11),
-    GAMEPAD_BUTTON_DPAD_DOWN(12),
-    GAMEPAD_BUTTON_DPAD_LEFT(13),
-    GAMEPAD_BUTTON_DPAD_RIGHT(14),
 
     /* special button bindings for triggers, since technically they are axes */
     GAMEPAD_LTRIGGER(-1),
@@ -92,39 +152,41 @@ public enum GLFWBinding {
     GAMEPAD_AXIS_LT(4),
     GAMEPAD_AXIS_RT(5),
 
+    /* D-Pad as pseudo-buttons (handled via sendJoystickDpad) */
+    GAMEPAD_DPAD_UP(-2),
+    GAMEPAD_DPAD_RIGHT(-3),
+    GAMEPAD_DPAD_DOWN(-4),
+    GAMEPAD_DPAD_LEFT(-5),
+
     /* special binding for joysticks */
     LEFT_JOYSTICK(-1),
     RIGHT_JOYSTICK(-1);
 
     public final int code;
-    static final int MNK_MIN_ORDINAL = KEY_SPACE.ordinal();
-    static final int MNK_MAX_ORDINAL = MOUSE_BUTTON_8.ordinal();
-    static final int GAMEPAD_MIN_ORDINAL = GAMEPAD_BUTTON_A.ordinal();
-    static final int GAMEPAD_MAX_ORDINAL = GAMEPAD_RTRIGGER.ordinal();
 
     GLFWBinding(int code) {
         this.code = code;
     }
 
     public static GLFWBinding[] valuesForType(AbstractControlElement.InputType type) {
-        GLFWBinding[] result = new GLFWBinding[0];
-        GLFWBinding[] values = GLFWBinding.values();
-        int bindingCount;
+        GLFWBinding[] all = GLFWBinding.values();
         if (type == AbstractControlElement.InputType.MNK) {
-            bindingCount = MNK_MAX_ORDINAL - MNK_MIN_ORDINAL + 1;
-            result = new GLFWBinding[bindingCount];
-            int i = 0;
-            for (int n = MNK_MIN_ORDINAL; n <= MNK_MAX_ORDINAL; n++) {
-                result[i++] = values[n];
-            }
-        } else if (type == AbstractControlElement.InputType.GAMEPAD) {
-            bindingCount = GAMEPAD_MAX_ORDINAL - GAMEPAD_MIN_ORDINAL + 1;
-            result = new GLFWBinding[bindingCount];
-            int i = 0;
-            for (int n = GAMEPAD_MIN_ORDINAL; n <= GAMEPAD_MAX_ORDINAL; n++) {
-                result[i++] = values[n];
-            }
+            return java.util.Arrays.stream(all)
+                    .filter(b -> {
+                        String name = b.name();
+                        return (b.ordinal() >= KEY_SPACE.ordinal() && b.ordinal() <= KEY_KP_EQUAL.ordinal())
+                                || (b.ordinal() >= MOUSE_BUTTON_LEFT.ordinal() && b.ordinal() <= MOUSE_BUTTON_8.ordinal())
+                                || name.startsWith("MOUSE_WHEEL_")
+                                || b == UI_TOGGLE_OVERLAY || b == UI_TOGGLE_KEYBOARD;
+                    })
+                    .toArray(GLFWBinding[]::new);
         }
-        return result;
+        if (type == AbstractControlElement.InputType.GAMEPAD) {
+            return java.util.Arrays.stream(all)
+                    .filter(b -> b.ordinal() >= GAMEPAD_BUTTON_A.ordinal()
+                            && b.ordinal() <= GAMEPAD_DPAD_LEFT.ordinal())
+                    .toArray(GLFWBinding[]::new);
+        }
+        return new GLFWBinding[0];
     }
 }
