@@ -5,7 +5,9 @@ public class C {
 
     public static class deps {
         public static final String ROOT = "dependencies";
-        public static final String JRE_ROOT = ROOT + "/jre";
+        public static final String JRE = ROOT + "/jre";
+        public static final String JRE_ROOT = JRE;
+
         public static final String JRE_21 = JRE_ROOT + "21";
         public static final String JRE_25 = JRE_ROOT + "25";
         public static final String LIBS = ROOT + "/libs";
