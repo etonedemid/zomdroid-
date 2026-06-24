@@ -1,14 +1,12 @@
 package com.zomdroid;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.system.ErrnoException;
 import android.util.Log;
-import android.view.GestureDetector;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import android.content.Intent;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -17,24 +15,28 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.zomdroid.input.GLFWBinding;
-import com.zomdroid.input.ExternalControllerConfig;
+import com.zomdroid.input.GamepadManager;
+import com.zomdroid.input.InputControlsView;
 import com.zomdroid.input.InputNativeInterface;
+import com.zomdroid.input.KeyboardManager;
 import com.zomdroid.databinding.ActivityGameBinding;
 import com.zomdroid.game.GameInstance;
 import com.zomdroid.game.GameInstanceManager;
 
 import org.fmod.FMOD;
 
-import java.lang.ref.WeakReference;
+public class GameActivity extends AppCompatActivity
+        implements GamepadManager.GamepadListener, KeyboardManager.KeyboardListener {
 
-
-public class GameActivity extends AppCompatActivity {
     public static final String EXTRA_GAME_INSTANCE_NAME = "com.zomdroid.GameActivity.EXTRA_GAME_INSTANCE_NAME";
     private static final String LOG_TAG = GameActivity.class.getName();
 
@@ -42,15 +44,18 @@ public class GameActivity extends AppCompatActivity {
     private Surface gameSurface;
     private static boolean isGameStarted = false;
     private Thread gameThread;
-    private GestureDetector gestureDetector;
-    private ExternalControllerConfig externalControllerConfig;
-    private boolean sentJoystickConnected = false;
-    
-    // D-pad state tracking for analog input (HAT axes)
-    private boolean dpadUpPressed = false;
-    private boolean dpadDownPressed = false;
-    private boolean dpadLeftPressed = false;
-    private boolean dpadRightPressed = false;
+
+    private GamepadManager gamepadManager;
+    private KeyboardManager keyboardManager;
+
+    private boolean isGamepadConnected = false;
+    private boolean isKeyboardConnected = false;
+
+    private boolean leftMouseDown = false;
+    private boolean rightMouseDown = false;
+    private boolean systemKeyboardVisible = false;
+
+    private float renderScale = 1f;
 
     @SuppressLint({"UnsafeDynamicallyLoadedCode", "ClickableViewAccessibility"})
     @Override
@@ -59,6 +64,34 @@ public class GameActivity extends AppCompatActivity {
 
         binding = ActivityGameBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        binding.gameSv.setFocusable(true);
+        binding.gameSv.setFocusableInTouchMode(true);
+        binding.gameSv.requestFocus();
+
+        renderScale = LauncherPreferences.requireSingleton().getRenderScale();
+
+        try {
+            gamepadManager = new GamepadManager(this, this);
+            boolean isTouchEnabled = LauncherPreferences.requireSingleton().isTouchControlsEnabled();
+            GamepadManager.setTouchOverride(isTouchEnabled);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Failed to initialize GamepadManager", e);
+            gamepadManager = null;
+        }
+
+        try {
+            keyboardManager = new KeyboardManager(this, this);
+            boolean isTouchEnabled = LauncherPreferences.requireSingleton().isTouchControlsEnabled();
+            KeyboardManager.setTouchOverride(isTouchEnabled);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Failed to initialize KeyboardManager", e);
+            keyboardManager = null;
+        }
+
+        applyInputOverlay();
+        binding.inputControlsV.setKeyboardToggleListener(this::toggleSystemKeyboard);
+        binding.inputControlsV.setRenderScale(renderScale);
 
         getWindow().setDecorFitsSystemWindows(false);
         final WindowInsetsController controller = getWindow().getInsetsController();
@@ -81,17 +114,8 @@ public class GameActivity extends AppCompatActivity {
 
         System.load(AppStorage.requireSingleton().getHomePath() + "/" + gameInstance.getFmodLibraryPath() + "/libfmod.so");
         System.load(AppStorage.requireSingleton().getHomePath() + "/" + gameInstance.getFmodLibraryPath() + "/libfmodstudio.so");
-/*        System.loadLibrary("fmod");
-        System.loadLibrary("fmodstudio");*/
 
         FMOD.init(this);
-
-        externalControllerConfig = ExternalControllerConfig.load(this);
-
-        // If external controller config disables overlay controls, hide overlay
-        if (!externalControllerConfig.overlayControlsEnabled) {
-            binding.inputControlsV.setOverlayEnabled(false);
-        }
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -100,77 +124,29 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
-/*        gestureDetector = new GestureDetector(this, new GestureDetector.OnGestureListener() {
-            private boolean showPress = false;
-            @Override
-            public boolean onDown(@NonNull MotionEvent e) {
-                Log.v("", "onDown " + e.getX() + " " + e.getY());
-                //InputBridge.sendMouseButton(GLFWConstants.GLFW_MOUSE_BUTTON_LEFT, GLFWConstants.GLFW_PRESS, event.getX(), event.getY());
-                return true;
-            }
-
-            @Override
-            public void onShowPress(@NonNull MotionEvent e) {
-                Log.v("", "onShowPress " + e.getX() + " " + e.getY());
-                showPress = true;
-                InputNativeInterface.sendCursorPos(e.getX(), e.getY());
-                InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, true);
-            }
-
-            @Override
-            public boolean onSingleTapUp(@NonNull MotionEvent e) {
-                Log.v("", "onSingleTapUp " + e.getX() + " " + e.getY());
-                InputNativeInterface.sendCursorPos(e.getX(), e.getY());
-                if (showPress) {
-                    InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, false);
-                }
-                showPress = false;
-                return true;
-            }
-
-            @Override
-            public boolean onScroll(@Nullable MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
-                InputNativeInterface.sendCursorPos(e2.getX(), e2.getY());
-                Log.v("", "onScroll " + (e1 == null ? "0" : e1.getX()) + " " + (e1 == null ? "0" : e1.getY()) + " " + e2.getX() + " " + e2.getY());
-                return true;
-            }
-
-            @Override
-            public void onLongPress(@NonNull MotionEvent e) {
-                Log.v("", "onLongPress " + e.getX() + " " + e.getY());
-            }
-
-            @Override
-            public boolean onFling(@Nullable MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
-                Log.v("", "onFling " + velocityX + " " + velocityY);
-                return true;
-            }
-        });
-        gestureDetector.setIsLongpressEnabled(false);*/
-
         binding.gameSv.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder holder) {
                 Log.d(LOG_TAG, "Game surface created.");
-                float renderScale = LauncherPreferences.requireSingleton().getRenderScale();
+                renderScale = LauncherPreferences.requireSingleton().getRenderScale();
                 int width = (int) (binding.gameSv.getWidth() * renderScale);
                 int height = (int) (binding.gameSv.getHeight() * renderScale);
                 binding.gameSv.getHolder().setFixedSize(width, height);
+                binding.inputControlsV.setRenderScale(renderScale);
             }
 
             @Override
             public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
                 Log.d(LOG_TAG, "Game surface changed.");
-
-
                 gameSurface = binding.gameSv.getHolder().getSurface();
                 if (gameSurface == null) throw new RuntimeException();
 
                 if (format != PixelFormat.RGBA_8888) {
-                    Log.w(LOG_TAG, "Using unsupported pixel format " + format); // LIAMELUI seems like default is RGB_565
+                    Log.w(LOG_TAG, "Using unsupported pixel format " + format);
                 }
 
                 GameLauncher.setSurface(gameSurface, width, height);
+
                 if (!isGameStarted) {
                     gameThread = new Thread(() -> {
                         try {
@@ -192,76 +168,323 @@ public class GameActivity extends AppCompatActivity {
         });
 
         binding.gameSv.setOnTouchListener(new View.OnTouchListener() {
-            float renderScale = LauncherPreferences.requireSingleton().getRenderScale();
-            int pointerId = -1;
+            int activePointerId = -1;
+            boolean leftPressedFinger = false;
 
             @Override
-            public boolean onTouch(View v, MotionEvent e) { // this should be in InputControlsView
+            public boolean onTouch(View v, MotionEvent e) {
+                if (binding.inputControlsV != null
+                        && binding.inputControlsV.getVisibility() == View.VISIBLE
+                        && binding.inputControlsV.onTouchEvent(e)) {
+                    return true;
+                }
+
                 int action = e.getActionMasked();
-                int actionIndex = e.getActionIndex();
-                int pointerId = e.getPointerId(actionIndex);
+                int idx = e.getActionIndex();
+
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
                     case MotionEvent.ACTION_POINTER_DOWN: {
-                        float x = e.getX(actionIndex);
-                        float y = e.getY(actionIndex);
-                        this.pointerId = pointerId;
-                        InputNativeInterface.sendCursorPos(x * this.renderScale, y * this.renderScale);
+                        activePointerId = e.getPointerId(idx);
+                        float x = e.getX(idx), y = e.getY(idx);
+                        InputNativeInterface.sendCursorPos(x * renderScale, y * renderScale);
+                        leftPressedFinger = true;
+                        leftMouseDown = true;
                         InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, true);
-                        // if overlay is visible, prefer overlay touch handling (controls view) by returning false
-                        if (binding.inputControlsV.isOverlayEnabled()) return false;
+                        if (isMouseEvent(e, idx)) {
+                            syncMouseReleaseFromMask(e.getButtonState());
+                        }
                         return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
-                        if (this.pointerId < 0) return false;
-                        int pointerIndex = e.findPointerIndex(this.pointerId);
-                        if (pointerIndex < 0) {
-                            this.pointerId = -1;
-                            return false;
+                        if (activePointerId < 0) return false;
+                        int p = e.findPointerIndex(activePointerId);
+                        if (p < 0) { activePointerId = -1; return false; }
+                        float x = e.getX(p), y = e.getY(p);
+                        InputNativeInterface.sendCursorPos(x * renderScale, y * renderScale);
+                        if (isMouseEvent(e, p)) {
+                            syncMouseReleaseFromMask(e.getButtonState());
                         }
-                        float x = e.getX(pointerIndex);
-                        float y = e.getY(pointerIndex);
-                        InputNativeInterface.sendCursorPos(x * this.renderScale, y * this.renderScale);
-                        if (binding.inputControlsV.isOverlayEnabled()) return false;
-                        return false;
+                        return true;
                     }
-                    case MotionEvent.ACTION_UP: {
-                        if (pointerId != this.pointerId) return false;
-                        this.pointerId = -1;
-                        InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, false);
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_POINTER_UP: {
+                        if (activePointerId < 0) return false;
+                        float x = e.getX(idx), y = e.getY(idx);
+                        if (leftPressedFinger) {
+                            InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, false);
+                            leftPressedFinger = false;
+                        }
+                        leftMouseDown = false;
+                        InputNativeInterface.sendCursorPos(x * renderScale, y * renderScale);
+                        if (isMouseEvent(e, idx)) {
+                            syncMouseReleaseFromMask(e.getButtonState());
+                        }
+                        activePointerId = -1;
+                        return true;
+                    }
+                    case MotionEvent.ACTION_CANCEL: {
+                        if (leftPressedFinger || leftMouseDown) {
+                            InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, false);
+                            leftPressedFinger = false;
+                            leftMouseDown = false;
+                        }
+                        activePointerId = -1;
                         return true;
                     }
                 }
                 return false;
             }
         });
+    }
 
-        // add in-game overlay toggle button (top-right)
-        if (externalControllerConfig.overlayControlsEnabled) {
-            binding.getRoot().post(() -> {
-                android.widget.ImageButton toggle = new android.widget.ImageButton(this);
-                toggle.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
-                int alpha = Math.round(binding.inputControlsV.getOverlayOpacityPercent() / 100f * 255f);
-                int bgColor = (alpha << 24) | 0x000000;
-                toggle.setBackgroundColor(bgColor);
-                toggle.setImageAlpha(alpha);
-                int size = (int) (56 * getResources().getDisplayMetrics().density);
-                android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(size, size);
-                params.gravity = android.view.Gravity.TOP | android.view.Gravity.END;
-                params.setMargins(16, 16, 16, 16);
-                toggle.setLayoutParams(params);
-                toggle.setOnClickListener(v -> {
-                    boolean enabled = !binding.inputControlsV.isOverlayEnabled();
-                    binding.inputControlsV.setOverlayEnabled(enabled);
-                    getSharedPreferences(C.shprefs.NAME, MODE_PRIVATE)
-                            .edit()
-                            .putBoolean(C.shprefs.keys.OVERLAY_ENABLED, enabled)
-                            .apply();
-                });
-                binding.getRoot().addView(toggle);
-            });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (gamepadManager != null) gamepadManager.register();
+        if (keyboardManager != null) keyboardManager.register();
+    }
+
+    @Override
+    protected void onPause() {
+        if (gamepadManager != null) gamepadManager.unregister();
+        if (keyboardManager != null) keyboardManager.unregister();
+        try { GameLauncher.destroySurface(); } catch (Throwable ignored) {}
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        cleanupGameRuntime();
+        super.onDestroy();
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
+
+    // GamepadManager.GamepadListener
+
+    @Override
+    public void onGamepadConnected() {
+        isGamepadConnected = true;
+        applyInputOverlay();
+    }
+
+    @Override
+    public void onGamepadDisconnected() {
+        isGamepadConnected = false;
+        applyInputOverlay();
+    }
+
+    @Override
+    public void onGamepadButton(int button, boolean pressed) {
+        InputNativeInterface.sendJoystickButton(button, pressed);
+    }
+
+    @Override
+    public void onGamepadAxis(int axis, float value) {
+        InputNativeInterface.sendJoystickAxis(axis, value);
+    }
+
+    @Override
+    public void onGamepadDpad(int dpad, char state) {
+        InputNativeInterface.sendJoystickDpad(dpad, state);
+    }
+
+    // KeyboardManager.KeyboardListener
+
+    @Override
+    public void onKeyboardConnected() {
+        isKeyboardConnected = true;
+        systemKeyboardVisible = false;
+        hideSystemKeyboard();
+        binding.inputControlsV.setKeyboardConnected(true);
+        reapplyImmersiveMode();
+        applyInputOverlay();
+    }
+
+    @Override
+    public void onKeyboardDisconnected() {
+        isKeyboardConnected = false;
+        binding.inputControlsV.setKeyboardConnected(false);
+        applyInputOverlay();
+    }
+
+    @Override
+    public void onKeyboardKey(int glfwCode, boolean pressed) {
+        InputNativeInterface.sendKeyboard(glfwCode, pressed);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        boolean handled = false;
+        if (keyboardManager != null) handled |= keyboardManager.handleKeyEvent(event);
+        if (isGamepadConnected && gamepadManager != null) handled |= gamepadManager.handleKeyEvent(event);
+        if (handled) return true;
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        boolean handled = false;
+        if (keyboardManager != null) handled |= keyboardManager.handleKeyEvent(event);
+        if (isGamepadConnected && gamepadManager != null) handled |= gamepadManager.handleKeyEvent(event);
+        if (handled) return true;
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        boolean isPointerDevice = event.isFromSource(InputDevice.SOURCE_MOUSE)
+                || event.isFromSource(InputDevice.SOURCE_TOUCHPAD)
+                || event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE;
+
+        if (!isPointerDevice) {
+            if (gamepadManager != null && gamepadManager.handleMotionEvent(event)) return true;
+            return super.onGenericMotionEvent(event);
         }
 
+        int action = event.getActionMasked();
+        int btn = event.getActionButton();
+
+        if (action == MotionEvent.ACTION_HOVER_MOVE) {
+            float x = event.getX();
+            float y = event.getY();
+            InputNativeInterface.sendCursorPos(x * renderScale, y * renderScale);
+            syncMouseReleaseFromMask(event.getButtonState());
+            return true;
+        }
+
+        if (action == MotionEvent.ACTION_SCROLL) {
+            float v = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+            if (v == 0) v = event.getAxisValue(MotionEvent.AXIS_WHEEL);
+            if (v != 0) {
+                InputNativeInterface.sendMouseScroll(0.0, v > 0 ? 1.0 : -1.0);
+            }
+            return true;
+        }
+
+        if (action == MotionEvent.ACTION_BUTTON_PRESS || action == MotionEvent.ACTION_BUTTON_RELEASE) {
+            boolean pressed = (action == MotionEvent.ACTION_BUTTON_PRESS);
+            InputNativeInterface.sendCursorPos(event.getX() * renderScale, event.getY() * renderScale);
+
+            if (btn == MotionEvent.BUTTON_PRIMARY) {
+                leftMouseDown = pressed;
+                InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, pressed);
+                syncMouseReleaseFromMask(event.getButtonState());
+                return true;
+            } else if (btn == MotionEvent.BUTTON_SECONDARY) {
+                rightMouseDown = pressed;
+                InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_RIGHT.code, pressed);
+                syncMouseReleaseFromMask(event.getButtonState());
+                return true;
+            }
+        }
+        return super.onGenericMotionEvent(event);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int kc = event.getKeyCode();
+        if (kc == KeyEvent.KEYCODE_BACK
+                || kc == KeyEvent.KEYCODE_VOLUME_UP
+                || kc == KeyEvent.KEYCODE_VOLUME_DOWN
+                || kc == KeyEvent.KEYCODE_VOLUME_MUTE) {
+            return super.dispatchKeyEvent(event);
+        }
+
+        boolean physicalKeyboardEvent = isTruePhysicalKeyboardEvent(event);
+        boolean textInputMode = systemKeyboardVisible;
+
+        if (isKeyboardConnected && physicalKeyboardEvent && !textInputMode) {
+            if (keyboardManager != null && keyboardManager.handleKeyEvent(event)) {
+                return true;
+            }
+            return true;
+        }
+
+        return super.dispatchKeyEvent(event);
+    }
+
+    private boolean isTruePhysicalKeyboardEvent(KeyEvent event) {
+        InputDevice device = event.getDevice();
+        if (device == null) return false;
+        boolean isGamepad = (device.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD;
+        if (isGamepad) return false;
+        return !device.isVirtual()
+                && (event.isFromSource(InputDevice.SOURCE_KEYBOARD)
+                || (device.getSources() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD);
+    }
+
+    private void applyInputOverlay() {
+        if (binding.inputControlsV == null) return;
+        binding.inputControlsV.setGamepadConnected(isGamepadConnected);
+
+        if (isKeyboardConnected) {
+            binding.inputControlsV.setVisibility(View.GONE);
+        } else if (isGamepadConnected) {
+            binding.inputControlsV.setVisibility(View.VISIBLE);
+            binding.inputControlsV.applyInputMode(InputControlsView.InputMode.MNK);
+        } else {
+            binding.inputControlsV.setVisibility(View.VISIBLE);
+            binding.inputControlsV.applyInputMode(InputControlsView.InputMode.ALL);
+        }
+    }
+
+    private void syncMouseReleaseFromMask(int mask) {
+        boolean leftNow  = (mask & MotionEvent.BUTTON_PRIMARY)   != 0;
+        boolean rightNow = (mask & MotionEvent.BUTTON_SECONDARY) != 0;
+
+        if (!leftNow && leftMouseDown) {
+            leftMouseDown = false;
+            InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_LEFT.code, false);
+        }
+        if (!rightNow && rightMouseDown) {
+            rightMouseDown = false;
+            InputNativeInterface.sendMouseButton(GLFWBinding.MOUSE_BUTTON_RIGHT.code, false);
+        }
+    }
+
+    private boolean isMouseEvent(MotionEvent e, int pointerIndex) {
+        return e.isFromSource(InputDevice.SOURCE_MOUSE)
+                || e.isFromSource(InputDevice.SOURCE_TOUCHPAD)
+                || (pointerIndex >= 0 && pointerIndex < e.getPointerCount()
+                && e.getToolType(pointerIndex) == MotionEvent.TOOL_TYPE_MOUSE);
+    }
+
+    public void showSystemKeyboard() {
+        binding.gameSv.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.showSoftInput(binding.gameSv, InputMethodManager.SHOW_FORCED);
+        }
+    }
+
+    public void hideSystemKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(binding.gameSv.getWindowToken(), 0);
+        }
+    }
+
+    private void toggleSystemKeyboard() {
+        if (isKeyboardConnected) return;
+        systemKeyboardVisible = !systemKeyboardVisible;
+        if (systemKeyboardVisible) {
+            showSystemKeyboard();
+        } else {
+            hideSystemKeyboard();
+        }
+    }
+
+    private void reapplyImmersiveMode() {
+        final WindowInsetsController controller = getWindow().getInsetsController();
+        if (controller != null) {
+            controller.hide(WindowInsets.Type.statusBars()
+                    | WindowInsets.Type.navigationBars()
+                    | WindowInsets.Type.ime());
+            controller.setSystemBarsBehavior(
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        }
+        binding.gameSv.requestFocus();
     }
 
     private void showExitGameDialog() {
@@ -283,291 +506,22 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void cleanupGameRuntime() {
-        try {
-            GameLauncher.destroySurface();
-        } catch (Throwable ignored) {
-        }
+        try { GameLauncher.destroySurface(); } catch (Throwable ignored) {}
+        try { GameLauncher.destroyZomdroidWindow(); } catch (Throwable ignored) {}
+        try { FMOD.close(); } catch (Throwable ignored) {}
 
-        try {
-            GameLauncher.destroyZomdroidWindow();
-        } catch (Throwable ignored) {
-        }
+        if (gamepadManager != null) gamepadManager.unregister();
+        if (keyboardManager != null) keyboardManager.unregister();
 
-        try {
-            FMOD.close();
-        } catch (Throwable ignored) {
-        }
-
-        // Wait for game thread to finish, then force-kill if still alive
         if (gameThread != null && gameThread.isAlive()) {
-            try {
-                gameThread.join(5000);
-            } catch (InterruptedException ignored) {
-            }
-            if (gameThread != null && gameThread.isAlive()) {
+            try { gameThread.join(5000); } catch (InterruptedException ignored) {}
+            if (gameThread.isAlive()) {
                 Log.w(LOG_TAG, "Game thread did not exit in time, force-interrupting");
                 gameThread.interrupt();
             }
         }
 
         isGameStarted = false;
-        sentJoystickConnected = false;
         gameThread = null;
-
-        // Reset D-pad state
-        dpadUpPressed = false;
-        dpadDownPressed = false;
-        dpadLeftPressed = false;
-        dpadRightPressed = false;
     }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // Destroy the surface so the native renderer pauses
-        try {
-            GameLauncher.destroySurface();
-        } catch (Throwable ignored) {
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        cleanupGameRuntime();
-        // Force-kill the process to ensure no native threads linger
-        super.onDestroy();
-        android.os.Process.killProcess(android.os.Process.myPid());
-    }
-
-    public void setOverlayEnabled(boolean enabled) {
-        if (binding != null) binding.inputControlsV.setOverlayEnabled(enabled);
-    }
-
-    private boolean isFromGamepad(InputDevice device, int source) {
-        return (source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
-                || (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
-                || (source & InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD
-                || (device != null && device.supportsSource(InputDevice.SOURCE_GAMEPAD));
-    }
-
-    private void ensureJoystickConnected() {
-        if (sentJoystickConnected) {
-            return;
-        }
-        InputNativeInterface.sendJoystickConnected();
-        sentJoystickConnected = true;
-    }
-
-    private void sendMappedButton(GLFWBinding binding, boolean isPressed) {
-        if (binding == GLFWBinding.GAMEPAD_LTRIGGER) {
-            InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_LT.code, isPressed ? 1f : 0f);
-            return;
-        }
-        if (binding == GLFWBinding.GAMEPAD_RTRIGGER) {
-            InputNativeInterface.sendJoystickAxis(GLFWBinding.GAMEPAD_AXIS_RT.code, isPressed ? 1f : 0f);
-            return;
-        }
-        // D-pad must go through the dedicated sendJoystickDpad native API,
-        // not sendJoystickButton (which only handles indices 0-10).
-        if (binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_UP
-                || binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_DOWN
-                || binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_LEFT
-                || binding == GLFWBinding.GAMEPAD_BUTTON_DPAD_RIGHT) {
-            sendDpadState();
-            return;
-        }
-        InputNativeInterface.sendJoystickButton(binding.code, isPressed);
-    }
-
-    private void sendMappedAxis(GLFWBinding targetAxis, float value) {
-        InputNativeInterface.sendJoystickAxis(targetAxis.code, value);
-    }
-
-    private GLFWBinding getMappedButtonForKeyCode(int keyCode) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BUTTON_A:
-                return externalControllerConfig.buttonA;
-            case KeyEvent.KEYCODE_BUTTON_B:
-                return externalControllerConfig.buttonB;
-            case KeyEvent.KEYCODE_BUTTON_X:
-                return externalControllerConfig.buttonX;
-            case KeyEvent.KEYCODE_BUTTON_Y:
-                return externalControllerConfig.buttonY;
-            case KeyEvent.KEYCODE_BUTTON_L1:
-                return externalControllerConfig.buttonLb;
-            case KeyEvent.KEYCODE_BUTTON_R1:
-                return externalControllerConfig.buttonRb;
-            case KeyEvent.KEYCODE_BUTTON_SELECT:
-                return externalControllerConfig.buttonBack;
-            case KeyEvent.KEYCODE_BUTTON_START:
-                return externalControllerConfig.buttonStart;
-            case KeyEvent.KEYCODE_BUTTON_THUMBL:
-                return externalControllerConfig.buttonLStick;
-            case KeyEvent.KEYCODE_BUTTON_THUMBR:
-                return externalControllerConfig.buttonRStick;
-            default:
-                return null;
-        }
-    }
-
-    private boolean handleDpadKey(int keyCode, boolean pressed) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_UP:
-                dpadUpPressed = pressed;
-                break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                dpadRightPressed = pressed;
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                dpadDownPressed = pressed;
-                break;
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                dpadLeftPressed = pressed;
-                break;
-            default:
-                return false;
-        }
-        sendDpadState();
-        return true;
-    }
-
-    /**
-     * Sends the current D-pad state as a bitmask through the dedicated native D-pad API.
-     * Bits: 0=up, 1=right, 2=down, 3=left
-     */
-    private void sendDpadState() {
-        char state = 0;
-        if (dpadUpPressed)    state |= (1 << 0);
-        if (dpadRightPressed) state |= (1 << 1);
-        if (dpadDownPressed)  state |= (1 << 2);
-        if (dpadLeftPressed)  state |= (1 << 3);
-        InputNativeInterface.sendJoystickDpad(0, state);
-    }
-
-    private float applyDeadZone(float value) {
-        float deadZone = Math.clamp(externalControllerConfig.axisDeadZone, 0f, 0.95f);
-        if (Math.abs(value) < deadZone) {
-            return 0f;
-        }
-        return value;
-    }
-
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        InputDevice device = event.getDevice();
-        int keyCode = event.getKeyCode();
-        int action = event.getAction();
-        
-        if (action != KeyEvent.ACTION_DOWN && action != KeyEvent.ACTION_UP) {
-            return super.dispatchKeyEvent(event);
-        }
-        
-        // Check if it's a D-pad key
-        boolean isDpadKey = keyCode == KeyEvent.KEYCODE_DPAD_UP
-                || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
-                || keyCode == KeyEvent.KEYCODE_DPAD_LEFT
-                || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
-        
-        // Handle D-pad if controller is enabled
-        if (isDpadKey && externalControllerConfig.enabled) {
-            Log.d(LOG_TAG, "D-pad key received: " + keyCode);
-            ensureJoystickConnected();
-            if (handleDpadKey(keyCode, action == KeyEvent.ACTION_DOWN)) {
-                return true;
-            }
-        }
-        
-        // Check if device is gamepad-like
-        if (!isFromGamepad(device, event.getSource())) {
-            return super.dispatchKeyEvent(event);
-        }
-
-        if (!externalControllerConfig.enabled) {
-            return super.dispatchKeyEvent(event);
-        }
-
-        if (action == KeyEvent.ACTION_DOWN && event.getRepeatCount() > 0) {
-            return true;
-        }
-
-        ensureJoystickConnected();
-
-        // D-pad already handled above, skip here
-        if (!isDpadKey && handleDpadKey(keyCode, action == KeyEvent.ACTION_DOWN)) {
-            return true;
-        }
-
-        GLFWBinding binding = getMappedButtonForKeyCode(keyCode);
-        if (binding != null) {
-            sendMappedButton(binding, action == KeyEvent.ACTION_DOWN);
-            return true;
-        }
-
-        if (keyCode == KeyEvent.KEYCODE_BUTTON_L2) {
-            sendMappedAxis(externalControllerConfig.axisLeftTrigger, action == KeyEvent.ACTION_DOWN ? 1f : 0f);
-            return true;
-        }
-
-        if (keyCode == KeyEvent.KEYCODE_BUTTON_R2) {
-            sendMappedAxis(externalControllerConfig.axisRightTrigger, action == KeyEvent.ACTION_DOWN ? 1f : 0f);
-            return true;
-        }
-
-        return super.dispatchKeyEvent(event);
-    }
-
-    @Override
-    public boolean onGenericMotionEvent(MotionEvent event) {
-        InputDevice device = event.getDevice();
-        if (!isFromGamepad(device, event.getSource())) {
-            return super.onGenericMotionEvent(event);
-        }
-
-        if (!externalControllerConfig.enabled || event.getAction() != MotionEvent.ACTION_MOVE) {
-            return super.onGenericMotionEvent(event);
-        }
-
-        ensureJoystickConnected();
-
-        float leftX = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_X));
-        float leftY = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_Y));
-        float rightX = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_Z));
-        float rightY = applyDeadZone(event.getAxisValue(MotionEvent.AXIS_RZ));
-
-        float leftTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), 0f);
-        float rightTrigger = Math.max(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), 0f);
-
-        // Handle D-Pad (HAT_X and HAT_Y are typically used for D-Pad on analog controllers)
-        float hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
-        float hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
-        
-        // Handle D-Pad via HAT axes → dedicated native D-pad API
-        boolean dpadRightNow = hatX > 0.5f;
-        boolean dpadLeftNow = hatX < -0.5f;
-        boolean dpadDownNow = hatY > 0.5f;
-        boolean dpadUpNow = hatY < -0.5f;
-
-        boolean dpadChanged = (dpadRightNow != dpadRightPressed)
-                || (dpadLeftNow != dpadLeftPressed)
-                || (dpadDownNow != dpadDownPressed)
-                || (dpadUpNow != dpadUpPressed);
-
-        if (dpadChanged) {
-            dpadRightPressed = dpadRightNow;
-            dpadLeftPressed = dpadLeftNow;
-            dpadDownPressed = dpadDownNow;
-            dpadUpPressed = dpadUpNow;
-            sendDpadState();
-        }
-
-        sendMappedAxis(externalControllerConfig.axisLeftX, leftX);
-        sendMappedAxis(externalControllerConfig.axisLeftY, leftY);
-        sendMappedAxis(externalControllerConfig.axisRightX, rightX);
-        sendMappedAxis(externalControllerConfig.axisRightY, rightY);
-        sendMappedAxis(externalControllerConfig.axisLeftTrigger, applyDeadZone(leftTrigger));
-        sendMappedAxis(externalControllerConfig.axisRightTrigger, applyDeadZone(rightTrigger));
-        return true;
-    }
-
-
 }

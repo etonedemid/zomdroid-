@@ -17,24 +17,28 @@ public class LauncherPreferences {
     transient private SharedPreferences sharedPreferences;
     transient private Gson gson;
 
-    private float renderScale = 1.f;
+    private float renderScale = 0.65f;
     private Renderer renderer = Renderer.GL4ES;
     private VulkanDriver vulkanDriver = VulkanDriver.SYSTEM_DEFAULT;
     private boolean isDebug = false;
     private AudioAPI audioAPI = AudioAPI.AAUDIO;
+    private String jvmArgs = "";
+    private String envVars = "";
+    private boolean touchControlsEnabled = false;
 
-    LauncherPreferences() {
-        // Keep GL4ES as the default renderer on all devices.
-        // If KGSL is supported, prefer the Freedreno Vulkan driver,
-        // but do not change the renderer from GL4ES to ZINK.
-        if (isKgslSupported()) {
-            this.vulkanDriver = VulkanDriver.FREEDRENO;
-        }
-    }
+    LauncherPreferences() {}
 
     private static boolean isKgslSupported() {
-        File kgsl = new File("/dev/kgsl-3d0");
-        return kgsl.exists();
+        String[] paths = {
+                "/dev/kgsl-3d0",
+                "/dev/kgsl/kgsl-3d0"
+        };
+        for (String p : paths) {
+            try {
+                if (new File(p).exists()) return true;
+            } catch (SecurityException ignored) {}
+        }
+        return false;
     }
 
     public static void init(@NonNull Context context) {
@@ -118,6 +122,37 @@ public class LauncherPreferences {
         saveToPreferences();
     }
 
+    public String getJvmArgs() {
+        return jvmArgs != null ? jvmArgs : "";
+    }
+
+    public void setJvmArgs(String jvmArgs) {
+        this.jvmArgs = jvmArgs != null ? jvmArgs : "";
+        saveToPreferences();
+    }
+
+    public String getEnvVars() {
+        return envVars != null ? envVars : "";
+    }
+
+    public void setEnvVars(String envVars) {
+        this.envVars = envVars != null ? envVars : "";
+        saveToPreferences();
+    }
+
+    public boolean isTouchControlsEnabled() {
+        return touchControlsEnabled;
+    }
+
+    public void setTouchControlsEnabled(boolean enabled) {
+        touchControlsEnabled = enabled;
+        saveToPreferences();
+    }
+
+    public static boolean isCustomDriverInstalled() {
+        return new File(AppStorage.requireSingleton().getHomePath() + "/" + C.deps.CUSTOM_DRIVER).exists();
+    }
+
     public enum Renderer {
         ZINK_ZFA("libzfa.so"),
         ZINK_OSMESA("libOSMesa.so"),
@@ -132,7 +167,13 @@ public class LauncherPreferences {
 
     public enum VulkanDriver {
         SYSTEM_DEFAULT(null),
-        FREEDRENO("libvulkan_freedreno.so");
+        FREEDRENO("libvulkan_freedreno.so"),
+        FREEDRENO_8XX_Expr("libvulkan_freedreno_8xx.so"),
+        FREEDRENO_840_v26("libvulkan_freedreno_840.so"),
+        TURNIP_bbdd688("libvulkan.ad07XX_regular.so"),
+        TURNIP_bbdd688_8gen2("libvulkan.ad07XX.so"),
+        Turnip_25_1_3_GMEM("vulkan.turnip.710.so"),
+        CUSTOM_DRIVER(C.deps.CUSTOM_DRIVER_FILENAME);
 
         final String libName;
 
