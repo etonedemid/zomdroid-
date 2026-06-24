@@ -13,6 +13,7 @@
         android:orientation="vertical"
         android:padding="@dimen/content_padding">
 
+        <!-- Graphics / Renderer card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -28,12 +29,28 @@
                 android:orientation="vertical"
                 android:padding="@dimen/content_padding">
 
-                <TextView
-                    android:id="@+id/settings_renderer_tv"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/settings_renderer"
-                    android:textAppearance="?attr/textAppearanceTitleSmall" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/settings_renderer_tv"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_renderer"
+                        android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                    <ImageButton
+                        android:id="@+id/settings_render_hint_help_ib"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/mt_icon_help"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/dialog_title_info" />
+                </LinearLayout>
 
                 <Spinner
                     android:id="@+id/settings_renderer_s"
@@ -93,6 +110,107 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Advanced settings card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/content_section_spacing"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/content_padding">
+
+                <!-- JVM args -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_jvm_args"
+                        android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                    <ImageButton
+                        android:id="@+id/settings_jargs_info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/mt_icon_help"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/dialog_title_info" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/settings_jargs_et"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:hint="-Xmx4g"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:minLines="2"
+                    android:maxLines="5"
+                    android:gravity="top"
+                    android:fontFamily="monospace"
+                    android:textSize="12sp" />
+
+                <!-- Env vars -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_env_vars"
+                        android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                    <ImageButton
+                        android:id="@+id/settings_env_vars_info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/mt_icon_help"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/dialog_title_info" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/settings_env_vars_et"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:hint="KEY=VALUE"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:minLines="2"
+                    android:maxLines="5"
+                    android:gravity="top"
+                    android:fontFamily="monospace"
+                    android:textSize="12sp" />
+
+                <!-- Debug mode -->
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settings_debug_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_spacing"
+                    android:text="@string/settings_debug_mode" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

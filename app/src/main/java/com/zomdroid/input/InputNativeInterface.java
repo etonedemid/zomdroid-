@@ -16,4 +16,6 @@ public class InputNativeInterface {
     public static native void sendJoystickButton(int button, boolean isPressed);
 
     public static native void sendJoystickConnected();
+
+    public static native void sendMouseScroll(double xOffset, double yOffset);
 }
