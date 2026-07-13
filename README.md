@@ -12,6 +12,8 @@
 - Supports **external controllers** with remapping and input preview
 - Supports **multiplayer** (direct IP connect, no Steam relay)
 
+[Discord](https://discord.gg/dv28MgtaNn)
+
 ## System requirements 
 
 - Android 11
