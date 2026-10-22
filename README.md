@@ -47,9 +47,9 @@ This is an independent project, Donate if you wish!
 
 [Ko-fi](https://ko-fi.com/etonedemid)
 
-BTC: bc1qa9730ykua7f3qv426qm9cjv9mupwj8kj8kzsuz
-
-TRC20:  TLnPV1JCpLwMyTcnmHoRDXMmwLpcjoFsDc
+- USDT (TRC20): `TCJ4HMJF3JHQG66khYTj98Em7v74j3cry9`
+- Bitcoin: `bc1qaeypp2m5h74alrmhyu4zvzf3yyf58k6mcw7868`
+- Monero: `45npN9u6zMFE7xMxfszfWBX2jdDdtZaogcGex4s5D7QDNsGPtbXjtjtXpbx9cnxLaKXC1KzGgckN2fMwrYrw5yqPTG2KiPj`
 
 ## Feedback
 
